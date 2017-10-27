@@ -3,8 +3,8 @@ project(TRACKING-ITSU C CXX)
 
 include(CheckIncludeFileCXX)
 
-set(TRACKINGITSU_TARGET_DEVICE CPU CACHE STRING "Target device where code must be run. Options are: CPU (default), GPU_CUDA")
-set_property(CACHE TRACKINGITSU_TARGET_DEVICE PROPERTY STRINGS CPU GPU_CUDA)
+set(TRACKINGITSU_TARGET_DEVICE CPU CACHE STRING "Target device where code must be run. Options are: CPU (default), GPU_CUDA, OPEN_CL")
+set_property(CACHE TRACKINGITSU_TARGET_DEVICE PROPERTY STRINGS CPU GPU_CUDA OPEN_CL)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -g -O0")
@@ -31,8 +31,22 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
     include_directories(${TRACKING-ITSU_SOURCE_DIR}/include/gpu)
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
+if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
+add_definitions(-DTRACKINGITSU_OPEN_CL_COMPILE)
+find_package( OpenCL REQUIRED )
+message("OpenCl driver found:")
+message(OpenCl)
+include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/include/gpu ${TRACKING-ITSU_SOURCE_DIR}/src)
+endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
+
 include_directories(${TRACKING-ITSU_SOURCE_DIR}/include)
 add_subdirectory(src)
 
 add_executable(tracking-itsu-main main.cpp)
+
+if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
+target_link_libraries(tracking-itsu-main src ${OpenCL_LIBRARIES})
+endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
+
+
 target_link_libraries(tracking-itsu-main src)
