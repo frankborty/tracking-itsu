@@ -81,9 +81,11 @@ else(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
 if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
   LIST(APPEND SRCS
-    CA/opencl/OCLUtils.cpp
-    CA/opencl/OCLContext.cpp
-    CA/opencl/OCLTracker.cpp
+    CA/opencl/Context.cpp
+    CA/opencl/PrimaryVertexContext.cpp
+    CA/opencl/Stream.cpp
+    CA/opencl/Utils.cpp
+    CA/opencl/Tracker.cpp
   )
   include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/src/CA/opencl/kernel)
 

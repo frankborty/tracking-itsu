@@ -28,7 +28,7 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
     add_definitions(-DTRACKINGITSU_CUDA_COMPILE)
 
-    include_directories(${TRACKING-ITSU_SOURCE_DIR}/include/gpu)
+    include_directories(${TRACKING-ITSU_SOURCE_DIR}/include/ITSReconstruction/CA/gpu)
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
 if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
@@ -36,7 +36,7 @@ add_definitions(-DTRACKINGITSU_OPEN_CL_COMPILE)
 find_package( OpenCL REQUIRED )
 message("OpenCl driver found:")
 message(OpenCl)
-include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/include/gpu ${TRACKING-ITSU_SOURCE_DIR}/src)
+include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/include/ITSReconstruction/CA/gpu ${TRACKING-ITSU_SOURCE_DIR}/src)
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
 
 include_directories(${TRACKING-ITSU_SOURCE_DIR}/include)

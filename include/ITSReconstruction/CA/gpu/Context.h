@@ -17,6 +17,7 @@
 
 #include <string>
 #include <vector>
+#include "ITSReconstruction/CA/Definitions.h"
 
 namespace o2
 {

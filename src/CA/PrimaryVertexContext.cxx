@@ -38,7 +38,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 
     mClusters[iLayer].clear();
 
-    if(clustersNum > mClusters[iLayer].capacity()) {
+    if(clustersNum > (int)mClusters[iLayer].capacity()) {
 
       mClusters[iLayer].reserve(clustersNum);
     }
