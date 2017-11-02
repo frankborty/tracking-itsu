@@ -44,24 +44,23 @@ int main(int argc, char** argv)
 
   std::string eventsFileName(argv[1]);
   std::string benchmarkFolderName = getDirectory(eventsFileName);
-  /*std::vector<Event> events = IOUtils::loadEventData(eventsFileName);
-  const int eventsNum = events.size();
+  std::vector<Event> events = IOUtils::loadEventData(eventsFileName);
+  /*const int eventsNum = events.size();
   if(eventsNum < 1){
 	  std::cerr << "Input file is empty" << std::endl;
 	  exit(EXIT_FAILURE);
-  }*/
-//
-//  std::vector<std::unordered_map<int, Label>> labelsMap;
-//  bool createBenchmarkData = false;
-//  std::ofstream correctRoadsOutputStream;
-//  std::ofstream duplicateRoadsOutputStream;
-//  std::ofstream fakeRoadsOutputStream;
-//
-//  int verticesNum = 0;
-//  for (int iEvent = 0; iEvent < eventsNum; ++iEvent) {
-//
-//    verticesNum += events[iEvent].getPrimaryVerticesNum();
-//  }
+  }
+
+  std::vector<std::unordered_map<int, Label>> labelsMap;
+  bool createBenchmarkData = false;
+  std::ofstream correctRoadsOutputStream;
+  std::ofstream duplicateRoadsOutputStream;
+  std::ofstream fakeRoadsOutputStream;
+  int verticesNum=0;
+  for (int iEvent = 0; iEvent < eventsNum; ++iEvent) {
+    verticesNum += events[iEvent].getPrimaryVerticesNum();
+  }
+  */
 //
 //  if (argv[2] != NULL) {
 //

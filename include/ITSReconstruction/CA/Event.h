@@ -66,7 +66,6 @@ class Event
 
   inline int Event::getPrimaryVerticesNum() const
   {
-
     return mPrimaryVertices.size();
   }
 
