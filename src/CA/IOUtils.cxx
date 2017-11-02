@@ -45,10 +45,9 @@ std::vector<Event> IOUtils::loadEventData(const std::string& fileName)
   float xCoordinate { }, yCoordinate { }, zCoordinate { }, alphaAngle { };
 
   inputStream.open(fileName);
-  for(int l=0;l<8000000;l++){
-  //while (std::getline(inputStream, line)) {
-  //std::getline(inputStream, line);
-    std::istringstream inputStringStream(line);
+
+  while (std::getline(inputStream, line)) {
+	std::istringstream inputStringStream(line);
 
     if (inputStringStream >> layerId >> xCoordinate >> yCoordinate >> zCoordinate) {
 
