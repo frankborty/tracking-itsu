@@ -19,6 +19,18 @@
 #include <vector>
 #include "ITSReconstruction/CA/Definitions.h"
 
+#if TRACKINGITSU_OCL_MODE
+	#include <stdio.h>
+	#include <sstream>
+	#include <stdexcept>
+	#include <iomanip>
+	#include <iostream>
+	#include <limits>
+	#include <fstream>
+	#include <vector>
+	#include<CL/cl.hpp>
+#endif
+
 namespace o2
 {
 namespace ITS
@@ -31,20 +43,32 @@ namespace GPU
 struct DeviceProperties final
 {
     std::string name;
+    long globalMemorySize;
+    int warpSize;
+
+#if TRACKINGITSU_CUDA_MODE
     int gpuProcessors;
     int cudaCores;
-    long globalMemorySize;
     long constantMemorySize;
     long sharedMemorySize;
     long maxClockRate;
     int busWidth;
     long l2CacheSize;
     long registersPerBlock;
-    int warpSize;
     int maxThreadsPerBlock;
     int maxBlocksPerSM;
     dim3 maxThreadsDim;
     dim3 maxGridDim;
+
+#elif TRACKINGITSU_OCL_MODE
+    std::string vendor;
+    std::size_t maxComputeUnits;
+    std::size_t maxWorkGroupSize;
+    std::size_t maxWorkItemDimension;
+	dim3 maxWorkItemSize;
+    cl::Context oclContext;
+    cl::Device oclDevice;
+#endif
 };
 
 class Context final
@@ -62,6 +86,9 @@ class Context final
     Context();
     ~Context() = default;
 
+#if TRACKINGITSU_OCL_MODE
+    int iCurrentDevice;
+#endif
     int mDevicesNum;
     std::vector<DeviceProperties> mDeviceProperties;
 };

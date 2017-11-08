@@ -14,7 +14,7 @@
 
 #include "ITSReconstruction/CA/gpu/Stream.h"
 
-//#include <cuda_runtime.h>
+#include <cuda_runtime.h>
 
 namespace o2
 {
@@ -27,20 +27,12 @@ namespace GPU
 
 Stream::Stream()
 {
-	int iErr;
-	std::cout << "CUDA stream" << std::endl;
-	DeviceProperties devProp=Context::getInstance().getDeviceProperties();
-	oclCommandQueue=cl::CommandQueue(devProp.oclContext,devProp.oclDevice,CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,&iErr);
-	if(iErr!=CL_SUCCESS){
-		std::cout<<"Error during stream creation"<< std::endl;
-	}
-
-
+  cudaStreamCreateWithFlags(&mStream, cudaStreamNonBlocking);
 }
 
 Stream::~Stream()
 {
-
+  cudaStreamDestroy(mStream);
 }
 
 const GPUStream& Stream::get() const

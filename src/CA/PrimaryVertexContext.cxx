@@ -83,8 +83,8 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
   }
 
   mRoads.clear();
-
 #if TRACKINGITSU_GPU_MODE
+  std::cerr<< "GPU primaryVertex"<< std::endl;
   mGPUContextDevicePointer = mGPUContext.initialize(mPrimaryVertex, mClusters, mCells, mCellsLookupTable);
 #else
   for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {

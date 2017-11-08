@@ -21,7 +21,7 @@
 namespace {
 
 using namespace o2::ITS::CA;
-/*
+
 __device__ void fillIndexTables(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
 {
 
@@ -90,10 +90,10 @@ __device__ void fillCellsPerClusterTables(GPU::PrimaryVertexContext &primaryVert
         trackletsToSet * sizeof(int));
   }
 }
-*/
-/*__global__ void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
+
+__global__ void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
 {
-  /*fillIndexTables(primaryVertexContext, layerIndex);
+  fillIndexTables(primaryVertexContext, layerIndex);
 
   if (layerIndex < Constants::ITS::CellsPerRoad) {
 
@@ -105,8 +105,6 @@ __device__ void fillCellsPerClusterTables(GPU::PrimaryVertexContext &primaryVert
     fillCellsPerClusterTables(primaryVertexContext, layerIndex);
   }
 }
-
-  */
 }
 
 namespace o2
@@ -131,20 +129,26 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
   mPrimaryVertex = UniquePointer<float3>{ primaryVertex };
 
   for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {
-	  this->mClusters[iLayer] = Vector<Cluster> { &clusters[iLayer][0], static_cast<int>(clusters[iLayer].size()) };
 
-	if (iLayer < Constants::ITS::TrackletsPerRoad) {
-	  this->mTracklets[iLayer].reset(static_cast<int>(std::ceil(
-		  (Constants::Memory::TrackletsMemoryCoefficients[iLayer] * clusters[iLayer].size())* clusters[iLayer + 1].size())));
-	}
+    this->mClusters[iLayer] =
+        Vector<Cluster> { &clusters[iLayer][0], static_cast<int>(clusters[iLayer].size()) };
 
-	if (iLayer < Constants::ITS::CellsPerRoad) {
-	  this->mTrackletsLookupTable[iLayer].reset(static_cast<int>(clusters[iLayer + 1].size()));
-	  this->mTrackletsPerClusterTable[iLayer].reset(static_cast<int>(clusters[iLayer + 1].size()));
-	  this->mCells[iLayer].reset(static_cast<int>(cells[iLayer].capacity()));
-	}
+    if (iLayer < Constants::ITS::TrackletsPerRoad) {
+
+      this->mTracklets[iLayer].reset(static_cast<int>(std::ceil(
+          (Constants::Memory::TrackletsMemoryCoefficients[iLayer] * clusters[iLayer].size())
+              * clusters[iLayer + 1].size())));
+    }
+
+    if (iLayer < Constants::ITS::CellsPerRoad) {
+
+      this->mTrackletsLookupTable[iLayer].reset(static_cast<int>(clusters[iLayer + 1].size()));
+      this->mTrackletsPerClusterTable[iLayer].reset(static_cast<int>(clusters[iLayer + 1].size()));
+      this->mCells[iLayer].reset(static_cast<int>(cells[iLayer].capacity()));
+    }
 
     if (iLayer < Constants::ITS::CellsPerRoad - 1) {
+
       this->mCellsLookupTable[iLayer].reset(static_cast<int>(cellsLookupTable[iLayer].size()));
       this->mCellsPerTrackletTable[iLayer].reset(static_cast<int>(cellsLookupTable[iLayer].size()));
     }
@@ -156,27 +160,26 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
 
   for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
 
-	  const int nextLayerClustersNum = static_cast<int>(clusters[iLayer + 1].size());
+    const int nextLayerClustersNum = static_cast<int>(clusters[iLayer + 1].size());
 
-	  dim3 threadsPerBlock { Utils::Host::getBlockSize(nextLayerClustersNum) };
-	  dim3 blocksGrid { Utils::Host::getBlocksGrid(threadsPerBlock, nextLayerClustersNum) };
+    dim3 threadsPerBlock { Utils::Host::getBlockSize(nextLayerClustersNum) };
+    dim3 blocksGrid { Utils::Host::getBlocksGrid(threadsPerBlock, nextLayerClustersNum) };
 
-	//  fillDeviceStructures<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(*gpuContextDevicePointer, iLayer);
-/*
-		cudaError_t error = cudaGetLastError();
+    fillDeviceStructures<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(*gpuContextDevicePointer, iLayer);
 
-		if (error != cudaSuccess) {
+    cudaError_t error = cudaGetLastError();
 
-		  std::ostringstream errorString { };
-		  errorString << __FILE__ << ":" << __LINE__ << " CUDA API returned error [" << cudaGetErrorString(error)
-			  << "] (code " << error << ")" << std::endl;
+    if (error != cudaSuccess) {
 
-		  throw std::runtime_error { errorString.str() };
-}*/
+      std::ostringstream errorString { };
+      errorString << __FILE__ << ":" << __LINE__ << " CUDA API returned error [" << cudaGetErrorString(error)
+          << "] (code " << error << ")" << std::endl;
+
+      throw std::runtime_error { errorString.str() };
+    }
   }
 
   return gpuContextDevicePointer;
-
 }
 
 }

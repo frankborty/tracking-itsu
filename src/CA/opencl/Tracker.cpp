@@ -41,7 +41,8 @@ namespace GPU
 void computeLayerTracklets(PrimaryVertexContext &primaryVertexContext, const int layerIndex,
     Vector<Tracklet>& trackletsVector)
 {
-//  const int currentClusterIndex = static_cast<int>(blockDim.x * blockIdx.x + threadIdx.x);
+	std::cout << "OCL_Tracker:computeLayerTracklets2"<< std::endl;
+  //const int currentClusterIndex = static_cast<int>(blockDim.x * blockIdx.x + threadIdx.x);
 //  int clusterTrackletsNum = 0;
 //
 //  if (currentClusterIndex < primaryVertexContext.getClusters()[layerIndex].size()) {
@@ -240,7 +241,7 @@ void computeLayerCells(PrimaryVertexContext& primaryVertexContext, const int lay
 void layerTrackletsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
     Vector<Tracklet> trackletsVector)
 {
-//  computeLayerTracklets(primaryVertexContext, layerIndex, trackletsVector);
+  computeLayerTracklets(primaryVertexContext, layerIndex, trackletsVector);
 }
 
 void sortTrackletsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
@@ -288,25 +289,31 @@ void sortCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layer
 template<>
 void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
 {
-//  std::array<size_t, Constants::ITS::CellsPerRoad> tempSize;
-//  std::array<int, Constants::ITS::CellsPerRoad> trackletsNum;
-//  std::array<GPU::Stream, Constants::ITS::TrackletsPerRoad> streamArray;
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-//
-//    tempSize[iLayer] = 0;
-//    const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
-//    primaryVertexContext.getTempTrackletArray()[iLayer].reset(trackletsNum);
-//
-//    cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],
-//        primaryVertexContext.getDeviceTrackletsPerClustersTable()[iLayer].get(),
-//        primaryVertexContext.getDeviceTrackletsLookupTable()[iLayer].get(),
-//        primaryVertexContext.getClusters()[iLayer + 1].size());
-//
-//    primaryVertexContext.getTempTableArray()[iLayer].reset(static_cast<int>(tempSize[iLayer]));
-//  }
-//
-//  cudaDeviceSynchronize();
+
+	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
+	std::array<size_t, Constants::ITS::CellsPerRoad> tempSize;
+	std::array<int, Constants::ITS::CellsPerRoad> trackletsNum;
+
+	//in order to get all the information about device, I must create the OCL context before the other operations
+	//(i.e. the context is necessary to create the CommandQueue (= CUDAStream))
+	const GPU::DeviceProperties& deviceProperties = GPU::Context::getInstance().getDeviceProperties();
+
+	std::array<GPU::Stream, Constants::ITS::TrackletsPerRoad> streamArray;
+
+	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
+		tempSize[iLayer] = 0;
+		const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
+		//primaryVertexContext.getTempTrackletArray()[iLayer].reset(trackletsNum);
+
+		/*cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],
+			primaryVertexContext.getDeviceTrackletsPerClustersTable()[iLayer].get(),
+			primaryVertexContext.getDeviceTrackletsLookupTable()[iLayer].get(),
+			primaryVertexContext.getClusters()[iLayer + 1].size());
+		 */
+		//primaryVertexContext.getTempTableArray()[iLayer].reset(static_cast<int>(tempSize[iLayer]));
+	}
+
+  //cudaDeviceSynchronize();
 //
 //  for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
 //

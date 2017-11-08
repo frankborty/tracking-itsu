@@ -29,6 +29,10 @@ namespace GPU
 
 namespace Utils {
 
+#if TRACKINGITSU_OCL_MODE
+char *OCLErr_code (int err_in);
+#endif
+
 namespace Host {
 dim3 getBlockSize(const int);
 dim3 getBlockSize(const int, const int);
@@ -44,6 +48,9 @@ void gpuMemcpyHostToDeviceAsync(void *, const void *, int, Stream&);
 void gpuMemcpyDeviceToHost(void *, const void *, int);
 void gpuStartProfiler();
 void gpuStopProfiler();
+
+
+
 }
 
 namespace Device {

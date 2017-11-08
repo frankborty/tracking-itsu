@@ -253,12 +253,12 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
     mPrimaryVertexContext.initialize(event, iVertex);
 
     computeTracklets();
-    computeCells();
+    /*computeCells();
     findCellsNeighbours();
     findTracks();
     computeMontecarloLabels();
 
-    roads.emplace_back(mPrimaryVertexContext.getRoads());
+    roads.emplace_back(mPrimaryVertexContext.getRoads());*/
   }
 
   return roads;
