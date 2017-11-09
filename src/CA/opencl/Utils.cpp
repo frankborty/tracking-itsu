@@ -225,25 +225,14 @@ dim3 Utils::Host::getBlocksGrid(const dim3 &threadsPerBlock, const int rowsNum, 
 
 void Utils::Host::gpuMalloc(void **p, const int size)
 {
-//  checkCUDAError(cudaMalloc(p, size), __FILE__, __LINE__);
-	std::cerr<<"gpuMalloc"<<std::endl;
-	/*try{
-		cl::Buffer(Context::getInstance().getDeviceProperties().oclContext,
-				CL_MEM_ALLOC_HOST_PTR,
-				(size_t)size,
-				&p,
-				NULL
-				);
-	}catch(const cl::Error & err){
-		std::string errString=Utils::OCLErr_code(err.err());
-		std::cout<< errString << std::endl;
-		throw std::runtime_error { errString };
-	}*/
+	//tmp:alloco sull'host e dopo sposto sul device
+	*p=malloc(size);
 }
 
 void Utils::Host::gpuFree(void *p)
 {
-//  checkCUDAError(cudaFree(p), __FILE__, __LINE__);
+	//tmp:free sull'host e dopo sposto sul device
+	free(p);
 }
 
 void Utils::Host::gpuMemset(void *p, int value, int size)
@@ -253,7 +242,10 @@ void Utils::Host::gpuMemset(void *p, int value, int size)
 
 void Utils::Host::gpuMemcpyHostToDevice(void *dst, const void *src, int size)
 {
-//  checkCUDAError(cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice), __FILE__, __LINE__);
+	cl::Context oclContext=Context::getInstance().getDeviceProperties().oclContext;
+	cl::Buffer buf(oclContext,CL_MEM_READ_WRITE,size);
+	cl::CommandQueue Q= Context::getInstance().getDeviceProperties().oclQueue;
+	dst = (void*)Q.enqueueMapBuffer(buf, CL_TRUE, CL_MAP_WRITE, 0, size);
 }
 
 void Utils::Host::gpuMemcpyHostToDeviceAsync(void *dst, const void *src, int size, Stream &stream)

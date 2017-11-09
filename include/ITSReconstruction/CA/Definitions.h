@@ -86,7 +86,9 @@ typedef struct _float4 { float x, y, z, w; } float4;
 template<typename T, std::size_t Size>
 using GPUArray = std::array<T, Size>;
 
+
 typedef struct _dummyStream {} GPUStream;
+
 
 #endif
 

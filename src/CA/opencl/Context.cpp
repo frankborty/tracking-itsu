@@ -150,7 +150,7 @@ Context::Context()
 
 
 	}
-	catch(const cl::Error & err){
+	catch(const cl::Error &err){
 		std::string errString=Utils::OCLErr_code(err.err());
 		std::cout<< errString << std::endl;
 		throw std::runtime_error { errString };
@@ -167,7 +167,7 @@ Context::Context()
 
 Context& Context::getInstance()
 {
-  std::cout << "Context" << std::endl;
+  //std::cout << "Context" << std::endl;
   static Context gpuContext;
   return gpuContext;
 }

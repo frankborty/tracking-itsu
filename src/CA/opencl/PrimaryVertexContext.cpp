@@ -93,7 +93,7 @@ __device__ void fillCellsPerClusterTables(GPU::PrimaryVertexContext &primaryVert
 */
 /*__global__ void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
 {
-  /*fillIndexTables(primaryVertexContext, layerIndex);
+  fillIndexTables(primaryVertexContext, layerIndex);
 
   if (layerIndex < Constants::ITS::CellsPerRoad) {
 

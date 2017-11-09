@@ -42,9 +42,7 @@ class Stream
       const GPUStream& get() const;
 
     private:
-#if TRACKINGITSU_OCL_MODE
-      cl::CommandQueue oclCommandQueue;
-#endif
+
       GPUStream mStream;
   };
 

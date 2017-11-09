@@ -68,6 +68,7 @@ struct DeviceProperties final
 	dim3 maxWorkItemSize;
     cl::Context oclContext;
     cl::Device oclDevice;
+    cl::CommandQueue oclQueue;
 #endif
 };
 
