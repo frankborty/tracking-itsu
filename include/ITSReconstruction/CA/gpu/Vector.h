@@ -84,6 +84,7 @@ class Vector
       : Vector { nullptr, 0 }
   {
     // Nothing to do
+	  std::cout<<"Vector()"<<std::endl;
   }
 
   template<typename T>

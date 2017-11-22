@@ -16,13 +16,17 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <iostream>
+#include<fstream>
 
 #include <CL/cl.hpp>
 #include "ITSReconstruction/CA/gpu/Context.h"
-
+#include <unistd.h>
 
 
 namespace {
+
 //void checkCUDAError(const cudaError_t error, const char *file, const int line)
 //{
 //  if (error != cudaSuccess) {
@@ -71,6 +75,41 @@ namespace CA
 {
 namespace GPU
 {
+
+
+
+cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDevice, const char* fileName,const char* kernelName){
+	std::cout << "CreateKernelFromFile: "<<fileName << std::endl;
+
+
+
+	std::ifstream kernelFile(fileName, std::ios::in);
+	if (!kernelFile.is_open())
+	{
+		std::cerr << "Failed to open file for reading: " << fileName << std::endl;
+		return cl::Kernel();
+	}
+
+	std::ostringstream oss;
+	oss << kernelFile.rdbuf();
+
+	std::string srcStdStr = oss.str();
+	//std::cerr<<srcStr<< std::endl;
+
+	cl::Program::Sources sources;
+	sources.push_back({srcStdStr.c_str(),srcStdStr.length()});
+	try{
+		cl::Program program(oclContext,sources);
+		program.build({oclDevice});
+
+		return cl::Kernel(program,kernelName);
+	}
+	catch(const cl::Error &err){
+		std::string errString=Utils::OCLErr_code(err.err());
+		std::cout<< errString << std::endl;
+		throw std::runtime_error { errString };
+	}
+}
 
 char* Utils::OCLErr_code (int err_in){
 	switch (err_in) {
@@ -226,6 +265,7 @@ dim3 Utils::Host::getBlocksGrid(const dim3 &threadsPerBlock, const int rowsNum, 
 void Utils::Host::gpuMalloc(void **p, const int size)
 {
 	//tmp:alloco sull'host e dopo sposto sul device
+	//std::cout<<"gpuMalloc"<< std::endl;
 	*p=malloc(size);
 }
 
@@ -238,24 +278,30 @@ void Utils::Host::gpuFree(void *p)
 void Utils::Host::gpuMemset(void *p, int value, int size)
 {
 //  checkCUDAError(cudaMemset(p, value, size), __FILE__, __LINE__);
+	p=memset(p,value,size);
 }
 
 void Utils::Host::gpuMemcpyHostToDevice(void *dst, const void *src, int size)
 {
-	cl::Context oclContext=Context::getInstance().getDeviceProperties().oclContext;
+	/*cl::Context oclContext=Context::getInstance().getDeviceProperties().oclContext;
 	cl::Buffer buf(oclContext,CL_MEM_READ_WRITE,size);
 	cl::CommandQueue Q= Context::getInstance().getDeviceProperties().oclQueue;
 	dst = (void*)Q.enqueueMapBuffer(buf, CL_TRUE, CL_MAP_WRITE, 0, size);
+	*/
+	//std::cout<<"gpuMemcpyHostToDevice"<< std::endl;
+	memcpy(dst,src,size);
 }
 
 void Utils::Host::gpuMemcpyHostToDeviceAsync(void *dst, const void *src, int size, Stream &stream)
 {
 //  checkCUDAError(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream.get()), __FILE__, __LINE__);
+	memcpy(dst,src,size);
 }
 
 void Utils::Host::gpuMemcpyDeviceToHost(void *dst, const void *src, int size)
 {
 //  checkCUDAError(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost), __FILE__, __LINE__);
+	memcpy(dst,src,size);
 }
 
 void Utils::Host::gpuStartProfiler()

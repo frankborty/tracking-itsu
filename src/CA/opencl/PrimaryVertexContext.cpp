@@ -12,15 +12,22 @@
 /// \brief
 ///
 
+#ifndef _TRAKINGITSU_INCLUDE_PRIMARY_VERTEX_CONTEXT_H_
+#define _TRAKINGITSU_INCLUDE_PRIMARY_VERTEX_CONTEXT_H_
+
 #include "ITSReconstruction/CA/gpu/PrimaryVertexContext.h"
 
 #include <sstream>
-
+#include <iostream>
 #include "ITSReconstruction/CA/gpu/Stream.h"
+#include "ITSReconstruction/CA/gpu/Context.h"
+#include "ITSReconstruction/CA/gpu/Utils.h"
 
 namespace {
 
+
 using namespace o2::ITS::CA;
+
 /*
 __device__ void fillIndexTables(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
 {
@@ -91,9 +98,11 @@ __device__ void fillCellsPerClusterTables(GPU::PrimaryVertexContext &primaryVert
   }
 }
 */
-/*__global__ void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
+void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
 {
-  fillIndexTables(primaryVertexContext, layerIndex);
+	std::cout<< "fillDeviceStructures()" << std::endl;
+
+  /*fillIndexTables(primaryVertexContext, layerIndex);
 
   if (layerIndex < Constants::ITS::CellsPerRoad) {
 
@@ -104,9 +113,9 @@ __device__ void fillCellsPerClusterTables(GPU::PrimaryVertexContext &primaryVert
 
     fillCellsPerClusterTables(primaryVertexContext, layerIndex);
   }
+  */
 }
 
-  */
 }
 
 namespace o2
@@ -128,11 +137,10 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
     const std::array<std::vector<Cell>, Constants::ITS::CellsPerRoad> &cells,
     const std::array<std::vector<int>, Constants::ITS::CellsPerRoad - 1> &cellsLookupTable)
 {
-  mPrimaryVertex = UniquePointer<float3>{ primaryVertex };
-
+  /*mPrimaryVertex = UniquePointer<float3>{ primaryVertex };
   for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {
 	  this->mClusters[iLayer] = Vector<Cluster> { &clusters[iLayer][0], static_cast<int>(clusters[iLayer].size()) };
-
+	  //this->mClusters[iLayer]= &clusters[iLayer][0];
 	if (iLayer < Constants::ITS::TrackletsPerRoad) {
 	  this->mTracklets[iLayer].reset(static_cast<int>(std::ceil(
 		  (Constants::Memory::TrackletsMemoryCoefficients[iLayer] * clusters[iLayer].size())* clusters[iLayer + 1].size())));
@@ -149,10 +157,16 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
       this->mCellsPerTrackletTable[iLayer].reset(static_cast<int>(cellsLookupTable[iLayer].size()));
     }
   }
-
+*/
   UniquePointer<PrimaryVertexContext> gpuContextDevicePointer { *this };
 
-  std::array<Stream, Constants::ITS::LayersNumber> streamArray;
+  /*std::array<Stream, Constants::ITS::LayersNumber> streamArray;
+
+  //creo i kernel necessari
+  cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
+  cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
+  cl::Kernel oclKernel=Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/fillIndexTables.cl","fillIndexTables");
+
 
   for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
 
@@ -161,8 +175,9 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
 	  dim3 threadsPerBlock { Utils::Host::getBlockSize(nextLayerClustersNum) };
 	  dim3 blocksGrid { Utils::Host::getBlocksGrid(threadsPerBlock, nextLayerClustersNum) };
 
-	//  fillDeviceStructures<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(*gpuContextDevicePointer, iLayer);
-/*
+	  fillDeviceStructures(*gpuContextDevicePointer, iLayer);
+	  fillDeviceStructures<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(*gpuContextDevicePointer, iLayer);
+
 		cudaError_t error = cudaGetLastError();
 
 		if (error != cudaSuccess) {
@@ -172,9 +187,9 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
 			  << "] (code " << error << ")" << std::endl;
 
 		  throw std::runtime_error { errorString.str() };
-}*/
+}
   }
-
+*/
   return gpuContextDevicePointer;
 
 }
@@ -183,3 +198,5 @@ UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float
 }
 }
 }
+
+#endif /* _TRAKINGITSU_INCLUDE_PRIMARY_VERTEX_CONTEXT_H_ */

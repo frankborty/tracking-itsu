@@ -27,7 +27,9 @@
 #include "ITSReconstruction/CA/TrackingUtils.h"
 #include "ITSReconstruction/CA/gpu/Context.h"
 #include "ITSReconstruction/CA/gpu/Stream.h"
+#if TRACKINGITSU_CUDA_MODE
 #include "ITSReconstruction/CA/gpu/Vector.h"
+#endif
 
 namespace o2
 {
@@ -292,17 +294,17 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
 	std::array<size_t, Constants::ITS::CellsPerRoad> tempSize;
-	std::array<int, Constants::ITS::CellsPerRoad> trackletsNum;
+	//std::array<int, Constants::ITS::CellsPerRoad> trackletsNum;
 
 	//in order to get all the information about device, I must create the OCL context before the other operations
 	//(i.e. the context is necessary to create the CommandQueue (= CUDAStream))
-	const GPU::DeviceProperties& deviceProperties = GPU::Context::getInstance().getDeviceProperties();
+	//const GPU::DeviceProperties& deviceProperties = GPU::Context::getInstance().getDeviceProperties();
 
-	std::array<GPU::Stream, Constants::ITS::TrackletsPerRoad> streamArray;
+	//std::array<GPU::Stream, Constants::ITS::TrackletsPerRoad> streamArray;
 
 	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
 		tempSize[iLayer] = 0;
-		const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
+		//const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
 		//primaryVertexContext.getTempTrackletArray()[iLayer].reset(trackletsNum);
 
 		/*cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],

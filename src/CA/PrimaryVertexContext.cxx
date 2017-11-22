@@ -26,6 +26,7 @@ namespace CA
 PrimaryVertexContext::PrimaryVertexContext()
 {
   // Nothing to do
+	std::cout<<"PrimaryVertexContext()"<<std::endl;
 }
 
 void PrimaryVertexContext::initialize(const Event& event, const int primaryVertexIndex) {
@@ -83,10 +84,10 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
   }
 
   mRoads.clear();
-#if TRACKINGITSU_GPU_MODE
+/*#if TRACKINGITSU_GPU_MODE
   std::cerr<< "GPU primaryVertex"<< std::endl;
   mGPUContextDevicePointer = mGPUContext.initialize(mPrimaryVertex, mClusters, mCells, mCellsLookupTable);
-#else
+#else*/
   for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {
 
     const int clustersNum = static_cast<int>(mClusters[iLayer].size());
@@ -138,7 +139,12 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
          event.getLayer(iLayer + 1).getClustersSize(), Constants::ITS::UnusedIndex);
     }
   }
-#endif
+
+
+
+
+
+
 }
 
 }

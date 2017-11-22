@@ -3,8 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 __kernel void
-add2Num(__private int a,__private int b, __global int  *c)
+fillIndexTables(__private int a,__private int b, __global int  *c)
 {
   *c=a+b;
-  //*c=150;
 }

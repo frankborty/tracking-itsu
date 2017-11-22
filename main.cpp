@@ -36,7 +36,6 @@ int main(int argc, char** argv)
 #endif
 
 
-
   if (argv[1] == NULL) {
     std::cerr << "Please, provide a data file." << std::endl;
     exit(EXIT_FAILURE);
@@ -52,7 +51,7 @@ int main(int argc, char** argv)
   }
 
   std::vector<std::unordered_map<int, Label>> labelsMap;
-  bool createBenchmarkData = false;
+  //bool createBenchmarkData = false;
   std::ofstream correctRoadsOutputStream;
   std::ofstream duplicateRoadsOutputStream;
   std::ofstream fakeRoadsOutputStream;
@@ -66,7 +65,7 @@ int main(int argc, char** argv)
 
     std::string labelsFileName(argv[2]);
 
-    createBenchmarkData = true;
+    //createBenchmarkData = true;
     labelsMap = IOUtils::loadLabels(eventsNum, labelsFileName);
 
     correctRoadsOutputStream.open(benchmarkFolderName + "CorrectRoads.txt");

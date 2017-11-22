@@ -87,6 +87,7 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
     CA/opencl/Utils.cpp
     CA/opencl/Tracker.cpp
   )
+configure_file(CA/opencl/kernel/fillIndexTables.cl ${CMAKE_CURRENT_BINARY_DIR}/kernel/fillIndexTables.cl COPYONLY)
   include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/src/CA/opencl/kernel)
 
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)

@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 #include "ITSReconstruction/CA/Definitions.h"
+#include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
+#include "ITSReconstruction/CA/PrimaryVertexContext.h"
 
 #if TRACKINGITSU_OCL_MODE
 	#include <stdio.h>
@@ -69,6 +71,7 @@ struct DeviceProperties final
     cl::Context oclContext;
     cl::Device oclDevice;
     cl::CommandQueue oclQueue;
+
 #endif
 };
 
@@ -82,6 +85,7 @@ class Context final
 
     const DeviceProperties& getDeviceProperties();
     const DeviceProperties& getDeviceProperties(const int);
+
 
   private:
     Context();

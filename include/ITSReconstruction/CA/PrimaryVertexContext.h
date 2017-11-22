@@ -32,12 +32,95 @@
 # include "ITSReconstruction/CA/gpu/UniquePointer.h"
 #endif
 
+#if TRACKINGITSU_OCL_MODE_MODE
+#include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
+#endif
+
+
+
 namespace o2
 {
 namespace ITS
 {
 namespace CA
 {
+
+#if TRACKINGITSU_OCL_MODE_MODE
+typedef struct{
+		float x;
+		float y;
+		float z;
+	}Float3Struct;
+
+	typedef struct{
+		float xCoordinate;
+		float yCoordinate;
+		float zCoordinate;
+		float phiCoordinate;
+		float rCoordinate;
+		int clusterId;
+		float alphaAngle;
+		int monteCarloId;
+		int indexTableBinIndex;
+	}ClusterStruct;
+
+	typedef struct{
+		const int mFirstClusterIndex;
+		const int mSecondClusterIndex;
+		const int mThirdClusterIndex;
+		const int mFirstTrackletIndex;
+		const int mSecondTrackletIndex;
+		Float3Struct mNormalVectorCoordinates;
+		const float mCurvature;
+	int mLevel;
+	}CellStruct;
+
+	typedef struct{
+		const int firstClusterIndex;
+		const int secondClusterIndex;
+		const float tanLambda;
+		const float phiCoordinate;
+	}TrackletStruct;
+
+	typedef struct{
+		const int firstClusterIndex;
+		const int secondClusterIndex;
+		const float tanLambda;
+		const float phiCoordinate;
+	}RoadsStruct;
+
+	typedef struct{
+		void * srPunt;
+		int size;
+	}VectStruct;
+
+	typedef struct {
+		Float3Struct *mPrimaryVertex;
+		int ClusterSize;
+		VectStruct mClusters[o2::ITS::CA::Constants::ITS::LayersNumber];
+		int CellsSize;
+		VectStruct mCells[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		int CellsLookupTableSize;
+		VectStruct mCellsLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad - 1];
+		int IndexTableSize;
+		VectStruct mIndexTable[o2::ITS::CA::Constants::IndexTable::ZBins * o2::ITS::CA::Constants::IndexTable::PhiBins + 1];
+		int TrackeltsSize;
+		VectStruct mTracklets[o2::ITS::CA::Constants::ITS::TrackletsPerRoad];
+		int TrackletLookupTableSize;
+		VectStruct mTrackletLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		/*int IndexTableX;
+		int IndexTavleY;
+		int **mIndexTable;
+		int CellsNeighX;
+		int CellsNeighY;
+		int *mCellsNeigh;
+		int RoadsSize;
+		VectStruct mRoads;*/
+	}PrimaryVertexContestStruct;
+
+
+#endif
+
 
 class PrimaryVertexContext
     final
@@ -56,6 +139,7 @@ class PrimaryVertexContext
         std::array<std::vector<std::vector<int>>, Constants::ITS::CellsPerRoad - 1>& getCellsNeighbours();
         std::vector<Road>& getRoads();
 
+/*
 #if TRACKINGITSU_GPU_MODE
         GPU::PrimaryVertexContext& getDeviceContext();
         GPU::Array<GPU::Vector<Cluster>, Constants::ITS::LayersNumber>& getDeviceClusters();
@@ -69,11 +153,16 @@ class PrimaryVertexContext
         std::array<GPU::Vector<Tracklet>, Constants::ITS::CellsPerRoad>& getTempTrackletArray();
         std::array<GPU::Vector<Cell>, Constants::ITS::CellsPerRoad - 1>& getTempCellArray();
         void updateDeviceContext();
-#else
+#else*/
         std::array<std::array<int, Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1>,
             Constants::ITS::TrackletsPerRoad>& getIndexTables();
         std::array<std::vector<Tracklet>, Constants::ITS::TrackletsPerRoad>& getTracklets();
         std::array<std::vector<int>, Constants::ITS::CellsPerRoad>& getTrackletsLookupTable();
+//#endif
+
+#if TRACKINGITSU_OCL_MODE
+        void *mPrimaryVertexStruct;
+        int  iPrimaryVertexStructSize;
 #endif
 
       private:
@@ -84,18 +173,21 @@ class PrimaryVertexContext
         std::array<std::vector<std::vector<int>>, Constants::ITS::CellsPerRoad - 1> mCellsNeighbours;
         std::vector<Road> mRoads;
 
+
+/*
 #if TRACKINGITSU_GPU_MODE
         GPU::PrimaryVertexContext mGPUContext;
         GPU::UniquePointer<GPU::PrimaryVertexContext> mGPUContextDevicePointer;
         std::array<GPU::Vector<int>, Constants::ITS::CellsPerRoad> mTempTableArray;
         std::array<GPU::Vector<Tracklet>, Constants::ITS::CellsPerRoad> mTempTrackletArray;
         std::array<GPU::Vector<Cell>, Constants::ITS::CellsPerRoad - 1> mTempCellArray;
+
 #else
-        std::array<std::array<int, Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1>,
+ */     std::array<std::array<int, Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1>,
             Constants::ITS::TrackletsPerRoad> mIndexTables;
         std::array<std::vector<Tracklet>, Constants::ITS::TrackletsPerRoad> mTracklets;
         std::array<std::vector<int>, Constants::ITS::CellsPerRoad> mTrackletsLookupTable;
-#endif
+//#endif
     };
 
     inline const float3& PrimaryVertexContext::getPrimaryVertex() const
@@ -127,7 +219,7 @@ class PrimaryVertexContext
     {
       return mRoads;
     }
-
+/*
 #if TRACKINGITSU_GPU_MODE
     inline GPU::PrimaryVertexContext& PrimaryVertexContext::getDeviceContext()
     {
@@ -188,8 +280,9 @@ class PrimaryVertexContext
     {
       mGPUContextDevicePointer = GPU::UniquePointer<GPU::PrimaryVertexContext> { mGPUContext };
     }
+
 #else
-    inline std::array<std::array<int, Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1>,
+*/    inline std::array<std::array<int, Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1>,
         Constants::ITS::TrackletsPerRoad>& PrimaryVertexContext::getIndexTables()
     {
       return mIndexTables;
@@ -204,7 +297,7 @@ class PrimaryVertexContext
     {
       return mTrackletsLookupTable;
     }
-#endif
+//#endif
 
 }
 }

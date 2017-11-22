@@ -18,6 +18,11 @@
 #include "ITSReconstruction/CA/Definitions.h"
 #include "ITSReconstruction/CA/gpu/Stream.h"
 
+
+#if TRACKINGITSU_OCL_MODE
+#include <CL/cl.hpp>
+#endif
+
 namespace o2
 {
 namespace ITS
@@ -31,6 +36,7 @@ namespace Utils {
 
 #if TRACKINGITSU_OCL_MODE
 char *OCLErr_code (int err_in);
+cl::Kernel CreateKernelFromFile(cl::Context, cl::Device device, const char* fileName, const char* kernelName);
 #endif
 
 namespace Host {
@@ -48,7 +54,6 @@ void gpuMemcpyHostToDeviceAsync(void *, const void *, int, Stream&);
 void gpuMemcpyDeviceToHost(void *, const void *, int);
 void gpuStartProfiler();
 void gpuStopProfiler();
-
 
 
 }

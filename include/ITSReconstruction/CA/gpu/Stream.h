@@ -16,9 +16,7 @@
 #define TRAKINGITSU_INCLUDE_GPU_STREAM_H_
 
 #include "ITSReconstruction/CA/Definitions.h"
-#if TRACKINGITSU_OCL_MODE
-#include "ITSReconstruction/CA/gpu/Context.h"
-#endif
+
 
 namespace o2
 {

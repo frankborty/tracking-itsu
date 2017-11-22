@@ -11,6 +11,8 @@
 /// \file PrimaryVertexContext.h
 /// \brief
 ///
+#ifndef _TRAKINGITSU_INCLUDE_GPU_PRIMARY_VERTEX_CONTEXT_H_
+#define _TRAKINGITSU_INCLUDE_GPU_PRIMARY_VERTEX_CONTEXT_H_
 
 #include "ITSReconstruction/CA/Cell.h"
 #include "ITSReconstruction/CA/Cluster.h"
@@ -123,3 +125,5 @@ class PrimaryVertexContext
 }
 }
 }
+
+#endif /* _TRAKINGITSU_INCLUDE_GPU_PRIMARY_VERTEX_CONTEXT_H_ */

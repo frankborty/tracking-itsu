@@ -13,6 +13,7 @@
 ///
 
 #include "ITSReconstruction/CA/Tracker.h"
+#include "ITSReconstruction/CA/Constants.h"
 
 #include <array>
 #include <cmath>
@@ -33,12 +34,92 @@
 #include "ITSReconstruction/CA/Tracklet.h"
 #include "ITSReconstruction/CA/TrackingUtils.h"
 
+
+namespace{
+typedef struct{
+		float x;
+		float y;
+		float z;
+	}Float3Struct;
+
+	typedef struct{
+		float xCoordinate;
+		float yCoordinate;
+		float zCoordinate;
+		float phiCoordinate;
+		float rCoordinate;
+		int clusterId;
+		float alphaAngle;
+		int monteCarloId;
+		int indexTableBinIndex;
+	}ClusterStruct;
+
+	typedef struct{
+		const int mFirstClusterIndex;
+		const int mSecondClusterIndex;
+		const int mThirdClusterIndex;
+		const int mFirstTrackletIndex;
+		const int mSecondTrackletIndex;
+		Float3Struct mNormalVectorCoordinates;
+		const float mCurvature;
+	int mLevel;
+	}CellStruct;
+
+	typedef struct{
+		const int firstClusterIndex;
+		const int secondClusterIndex;
+		const float tanLambda;
+		const float phiCoordinate;
+	}TrackletStruct;
+
+	typedef struct{
+		const int firstClusterIndex;
+		const int secondClusterIndex;
+		const float tanLambda;
+		const float phiCoordinate;
+	}RoadsStruct;
+
+	typedef struct{
+		void * srPunt;
+		int size;
+	}VectStruct;
+
+	typedef struct {
+		Float3Struct *mPrimaryVertex;
+		int ClusterSize;
+		VectStruct mClusters[o2::ITS::CA::Constants::ITS::LayersNumber];
+		int CellsSize;
+		VectStruct mCells[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		int CellsLookupTableSize;
+		VectStruct mCellsLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad - 1];
+		int IndexTableSize;
+		VectStruct mIndexTable[o2::ITS::CA::Constants::IndexTable::ZBins * o2::ITS::CA::Constants::IndexTable::PhiBins + 1];
+		int TrackeltsSize;
+		VectStruct mTracklets[o2::ITS::CA::Constants::ITS::TrackletsPerRoad];
+		int TrackletLookupTableSize;
+		VectStruct mTrackletLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		/*int IndexTableX;
+		int IndexTavleY;
+		int **mIndexTable;
+		int CellsNeighX;
+		int CellsNeighY;
+		int *mCellsNeigh;
+		int RoadsSize;
+		VectStruct mRoads;*/
+	}PrimaryVertexContestStruct;
+
+
+}
+
 namespace o2
 {
 namespace ITS
 {
 namespace CA
 {
+
+
+
 
 #if !TRACKINGITSU_GPU_MODE
 template<>
@@ -239,6 +320,7 @@ template<bool IsGPU>
 Tracker<IsGPU>::Tracker()
 {
   // Nothing to do
+	std::cout<<"Tracker()"<< std::endl;
 }
 
 template<bool IsGPU>
@@ -249,8 +331,87 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
   roads.reserve(verticesNum);
 
   for (int iVertex { 0 }; iVertex < verticesNum; ++iVertex) {
-
+	PrimaryVertexContestStruct srPvc;
+	int iSize;
+	int iTotalSize=0;
+	std::cout<<"Initial size of struct: "<<iSize<<std::endl;
     mPrimaryVertexContext.initialize(event, iVertex);
+
+
+
+    //fill the structure to pass to openCl kernel
+
+    //primaryVertex [float3]
+    srPvc.mPrimaryVertex=(Float3Struct*)&(mPrimaryVertexContext.getPrimaryVertex());
+
+    //clusters
+    srPvc.ClusterSize=mPrimaryVertexContext.getClusters().size();
+    for(int i=0;i<srPvc.ClusterSize;i++){
+    	srPvc.mClusters[i].size=mPrimaryVertexContext.getClusters()[i].size();
+    	srPvc.mClusters[i].srPunt=&(mPrimaryVertexContext.getClusters()[i]).front();
+    	iSize=srPvc.mClusters[i].size*sizeof(ClusterStruct);
+    }
+    iTotalSize+=iSize;
+    std::cout<<"[Clusters]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+    //cells
+    srPvc.CellsSize=mPrimaryVertexContext.getCells().size();
+    for(int i=0;i<srPvc.CellsSize;i++){
+		srPvc.mCells[i].size=mPrimaryVertexContext.getCells()[i].size();
+		srPvc.mCells[i].srPunt=&(mPrimaryVertexContext.getCells()[i]).front();
+		iSize=srPvc.mCells[i].size*sizeof(CellStruct);
+	}
+    iTotalSize+=iSize;
+    std::cout<<"[Cells]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+    //cellsLookupTable
+    srPvc.CellsLookupTableSize=mPrimaryVertexContext.getCells().size();
+    for(int i=0;i<srPvc.CellsLookupTableSize;i++){
+		srPvc.mCellsLookupTable[i].size=mPrimaryVertexContext.getCellsLookupTable()[i].size();
+		srPvc.mCellsLookupTable[i].srPunt=&(mPrimaryVertexContext.getCellsLookupTable()[i]).front();
+		iSize=srPvc.mCellsLookupTable[i].size*sizeof(int);
+	}
+    iTotalSize+=iSize;
+    std::cout<<"[CellsLookupTable]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+    //indexTable
+	srPvc.IndexTableSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
+	for(int i=0;i<srPvc.IndexTableSize;i++){
+		srPvc.mIndexTable[i].size=mPrimaryVertexContext.getIndexTables()[i].size();
+		srPvc.mIndexTable[i].srPunt=&(mPrimaryVertexContext.getIndexTables()[i]).front();
+		iSize=srPvc.mIndexTable[i].size*sizeof(int);
+	}
+	iTotalSize+=iSize;
+	std::cout<<"[IndexTable]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+	//tracklets
+	srPvc.TrackeltsSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
+	for(int i=0;i<srPvc.TrackeltsSize;i++){
+		srPvc.mTracklets[i].size=mPrimaryVertexContext.getTracklets()[i].size();
+		srPvc.mTracklets[i].srPunt=&(mPrimaryVertexContext.getTracklets()[i]).front();
+		iSize=srPvc.mTracklets[i].size*sizeof(TrackletStruct);
+	}
+	iTotalSize+=iSize;
+	std::cout<<"[tracklets]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+	//trackletLookupTable
+	srPvc.TrackletLookupTableSize=mPrimaryVertexContext.getTrackletsLookupTable().size();
+	for(int i=0;i<srPvc.CellsLookupTableSize;i++){
+		srPvc.mTrackletLookupTable[i].size=mPrimaryVertexContext.getTrackletsLookupTable()[i].size();
+		srPvc.mTrackletLookupTable[i].srPunt=&(mPrimaryVertexContext.getTrackletsLookupTable()[i]).front();
+		iSize=srPvc.mTrackletLookupTable[i].size*sizeof(int);
+	}
+	iTotalSize+=iSize;
+	std::cout<<"[TrackletLookupTable]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+	//srPcv struct
+	iSize=sizeof(srPvc);
+	iTotalSize+=iSize;
+	std::cout<<"[BaseStruct]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+
+	mPrimaryVertexContext.iPrimaryVertexStructSize=iTotalSize;
+	mPrimaryVertexContext.mPrimaryVertexStruct=&srPvc;
+
 
     computeTracklets();
     /*computeCells();
