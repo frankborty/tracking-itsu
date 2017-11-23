@@ -24,7 +24,7 @@
 #endif
 
 #if defined(TRACKINGITSU_OPEN_CL_COMPILE)
-#define __CL_ENABLE_EXCEPTIONS //abilita le eccezioni
+#define __CL_ENABLE_EXCEPTIONS //enable exceptions
 # define TRACKINGITSU_OCL_MODE true
 # define TRACKINGITSU_CUDA_MODE false
 #elif(TRACKINGITSU_CUDA_COMPILE)

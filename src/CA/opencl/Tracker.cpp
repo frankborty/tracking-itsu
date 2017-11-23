@@ -293,7 +293,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 {
 
 	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
-	std::array<size_t, Constants::ITS::CellsPerRoad> tempSize;
+	//std::array<size_t, Constants::ITS::CellsPerRoad> tempSize;
 	//std::array<int, Constants::ITS::CellsPerRoad> trackletsNum;
 
 	//in order to get all the information about device, I must create the OCL context before the other operations
@@ -303,7 +303,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 	//std::array<GPU::Stream, Constants::ITS::TrackletsPerRoad> streamArray;
 
 	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-		tempSize[iLayer] = 0;
+		//tempSize[iLayer] = 0;
 		//const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
 		//primaryVertexContext.getTempTrackletArray()[iLayer].reset(trackletsNum);
 
