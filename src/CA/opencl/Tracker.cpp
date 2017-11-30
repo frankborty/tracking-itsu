@@ -29,7 +29,9 @@
 #include "ITSReconstruction/CA/gpu/Stream.h"
 #if TRACKINGITSU_CUDA_MODE
 #include "ITSReconstruction/CA/gpu/Vector.h"
+#include "ITSReconstruction/CA/gpu/Utils.h"
 #endif
+
 
 namespace o2
 {
@@ -39,6 +41,8 @@ namespace CA
 {
 namespace GPU
 {
+
+
 
 void computeLayerTracklets(PrimaryVertexContext &primaryVertexContext, const int layerIndex,
     Vector<Tracklet>& trackletsVector)
@@ -269,6 +273,8 @@ void layerCellsKernel(PrimaryVertexContext& primaryVertexContext, const int laye
 //  computeLayerCells(primaryVertexContext, layerIndex, cellsVector);
 }
 
+
+
 void sortCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
     Vector<Cell> tempCellsArray)
 {
@@ -288,33 +294,67 @@ void sortCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layer
 
 } /// End of GPU namespace
 
+#define BUFFER_SIZE 20
+
 template<>
 void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
 {
-
 	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
-	//std::array<size_t, Constants::ITS::CellsPerRoad> tempSize;
-	//std::array<int, Constants::ITS::CellsPerRoad> trackletsNum;
+	int i;
+try{
+	int iLayer=0;
 
-	//in order to get all the information about device, I must create the OCL context before the other operations
-	//(i.e. the context is necessary to create the CommandQueue (= CUDAStream))
-	//const GPU::DeviceProperties& deviceProperties = GPU::Context::getInstance().getDeviceProperties();
+	//creo il kernel
+	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
+	cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
+	cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
+	PrimaryVertexContestStruct *pvcStruct=(PrimaryVertexContestStruct*)primaryVertexContext.mPrimaryVertexStruct;
+	cl::Kernel oclKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
 
-	//std::array<GPU::Stream, Constants::ITS::TrackletsPerRoad> streamArray;
+
+	// Map cBuffer to host pointer. This enforces a sync with
+	// the host backing space, remember we choose GPU device.
+	/*int * output = (int *) oclCommandQueue.enqueueMapBuffer(
+		cBuffer,
+		CL_TRUE, // block
+		CL_MAP_READ,
+		0,
+		BUFFER_SIZE * sizeof(int));
+
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		std::cout << C[i] << " ";
+	}*/
+	std::cout << std::endl;
+
 
 	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-		//tempSize[iLayer] = 0;
-		//const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
-		//primaryVertexContext.getTempTrackletArray()[iLayer].reset(trackletsNum);
+		std::cout<< "OpenClKernel for compute trackelts between Layer "<<iLayer<<" and "<< iLayer+1<< std::endl;
 
-		/*cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],
-			primaryVertexContext.getDeviceTrackletsPerClustersTable()[iLayer].get(),
-			primaryVertexContext.getDeviceTrackletsLookupTable()[iLayer].get(),
-			primaryVertexContext.getClusters()[iLayer + 1].size());
-		 */
-		//primaryVertexContext.getTempTableArray()[iLayer].reset(static_cast<int>(tempSize[iLayer]));
+		// Set kernel args
+		oclKernel.setArg(0, pvcStruct->bPrimaryVertex);
+		oclKernel.setArg(1, pvcStruct->bClusters[iLayer]);
+		oclKernel.setArg(2, pvcStruct->bClusters[iLayer+1]);
+		oclKernel.setArg(3, pvcStruct->bIndexTable[iLayer]);
+		oclKernel.setArg(4, pvcStruct->bTrackletLookupTable[iLayer]);
+		oclKernel.setArg(5, pvcStruct->bTrackletLookupTable[iLayer-1]);
+		oclKernel.setArg(6, pvcStruct->bTrackletsSize);
+		oclKernel.setArg(7, pvcStruct->bIndexTable[iLayer]);
+		oclKernel.setArg(8, pvcStruct->bIndexTable[iLayer]);
+
+			// Do the work
+			oclCommandQueue.enqueueNDRangeKernel(
+				oclKernel,
+				cl::NullRange,
+				cl::NDRange(BUFFER_SIZE),
+				cl::NullRange);
+
 	}
-
+}
+catch(const cl::Error &err){
+		std::string errString=GPU::Utils::OCLErr_code(err.err());
+		std::cout<< errString << std::endl;
+		throw std::runtime_error { errString };
+	}
   //cudaDeviceSynchronize();
 //
 //  for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {

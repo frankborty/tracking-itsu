@@ -17,10 +17,10 @@
 #include "ITSReconstruction/CA/Road.h"
 */
 #include "ITSReconstruction/CA/Constants.h"
+#include "CL/cl.hpp"
 
 
-
-typedef struct{
+typedef struct __attribute__ ((packed)) float3Struct{
 		float x;
 		float y;
 		float z;
@@ -69,19 +69,41 @@ typedef struct{
 	}VectStruct;
 
 	typedef struct {
-		Float3Struct *mPrimaryVertex;
+		Float3Struct mPrimaryVertex;
+		cl::Buffer bPrimaryVertex;
+
 		int ClusterSize;
 		VectStruct mClusters[o2::ITS::CA::Constants::ITS::LayersNumber];
+		cl::Buffer bClusters[o2::ITS::CA::Constants::ITS::LayersNumber];
+		cl::Buffer bClustersSize;
+
 		int CellsSize;
 		VectStruct mCells[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		cl::Buffer bCells[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		cl::Buffer bCellsSize;
+
 		int CellsLookupTableSize;
 		VectStruct mCellsLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad - 1];
+		cl::Buffer bCellsLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad - 1];
+		cl::Buffer bCellsLookupTableSize;
+
 		int IndexTableSize;
 		VectStruct mIndexTable[o2::ITS::CA::Constants::IndexTable::ZBins * o2::ITS::CA::Constants::IndexTable::PhiBins + 1];
+		cl::Buffer bIndexTable[o2::ITS::CA::Constants::IndexTable::ZBins * o2::ITS::CA::Constants::IndexTable::PhiBins + 1];
+		cl::Buffer bIndexTableSize;
+
+
+
 		int TrackeltsSize;
 		VectStruct mTracklets[o2::ITS::CA::Constants::ITS::TrackletsPerRoad];
+		cl::Buffer bTracklets[o2::ITS::CA::Constants::ITS::TrackletsPerRoad];
+		cl::Buffer bTrackletsSize;
+
+
 		int TrackletLookupTableSize;
-		VectStruct mTrackletLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		VectStruct mTrackletLookupTable [o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		cl::Buffer bTrackletLookupTable [o2::ITS::CA::Constants::ITS::CellsPerRoad];
+		cl::Buffer bTrackletLookupTableSize;
 		/*int IndexTableX;
 		int IndexTavleY;
 		int **mIndexTable;

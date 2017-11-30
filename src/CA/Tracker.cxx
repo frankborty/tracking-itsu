@@ -53,81 +53,178 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 	int iSize=0;
 	int iTotalSize=0;
 	PrimaryVertexContestStruct srPvc;
-	//std::cout<<"Initial size of struct: "<<iTotalSize<<std::endl;
+	std::vector<int> sizeVector;
+
+	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
+
 
 	//primaryVertex [float3]
-	//srPvc.mPrimaryVertex=(Float3Struct*)&(mPrimaryVertexContext.getPrimaryVertex());
-
-	//clusters
-	srPvc.ClusterSize=mPrimaryVertexContext.getClusters().size();
-	for(int i=0;i<srPvc.ClusterSize;i++){
-		srPvc.mClusters[i].size=mPrimaryVertexContext.getClusters()[i].size();
-		srPvc.mClusters[i].srPunt=&(mPrimaryVertexContext.getClusters()[i]).front();
-		iSize=srPvc.mClusters[i].size*sizeof(ClusterStruct);
-	}
-	iTotalSize+=iSize;
-	//std::cout<<"[Clusters]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-
-	//cells
-	srPvc.CellsSize=mPrimaryVertexContext.getCells().size();
-	for(int i=0;i<srPvc.CellsSize;i++){
-		srPvc.mCells[i].size=mPrimaryVertexContext.getCells()[i].size();
-		srPvc.mCells[i].srPunt=&(mPrimaryVertexContext.getCells()[i]).front();
-		iSize=srPvc.mCells[i].size*sizeof(CellStruct);
-	}
-	iTotalSize+=iSize;
-	//std::cout<<"[Cells]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-
-	//cellsLookupTable
-	srPvc.CellsLookupTableSize=mPrimaryVertexContext.getCells().size();
-	for(int i=0;i<srPvc.CellsLookupTableSize;i++){
-		srPvc.mCellsLookupTable[i].size=mPrimaryVertexContext.getCellsLookupTable()[i].size();
-		srPvc.mCellsLookupTable[i].srPunt=&(mPrimaryVertexContext.getCellsLookupTable()[i]).front();
-		iSize=srPvc.mCellsLookupTable[i].size*sizeof(int);
-	}
-	iTotalSize+=iSize;
-	//std::cout<<"[CellsLookupTable]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-
-	//indexTable
-	srPvc.IndexTableSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
-	for(int i=0;i<srPvc.IndexTableSize;i++){
-		srPvc.mIndexTable[i].size=mPrimaryVertexContext.getIndexTables()[i].size();
-		srPvc.mIndexTable[i].srPunt=&(mPrimaryVertexContext.getIndexTables()[i]).front();
-		iSize=srPvc.mIndexTable[i].size*sizeof(int);
-	}
-	iTotalSize+=iSize;
-	//std::cout<<"[IndexTable]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-
-	//tracklets
-	srPvc.TrackeltsSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
-	for(int i=0;i<srPvc.TrackeltsSize;i++){
-		srPvc.mTracklets[i].size=mPrimaryVertexContext.getTracklets()[i].size();
-		srPvc.mTracklets[i].srPunt=&(mPrimaryVertexContext.getTracklets()[i]).front();
-		iSize=srPvc.mTracklets[i].size*sizeof(TrackletStruct);
-	}
-	iTotalSize+=iSize;
-	//std::cout<<"[tracklets]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-
-	//trackletLookupTable
-	srPvc.TrackletLookupTableSize=mPrimaryVertexContext.getTrackletsLookupTable().size();
-	for(int i=0;i<srPvc.CellsLookupTableSize;i++){
-		srPvc.mTrackletLookupTable[i].size=mPrimaryVertexContext.getTrackletsLookupTable()[i].size();
-		srPvc.mTrackletLookupTable[i].srPunt=&(mPrimaryVertexContext.getTrackletsLookupTable()[i]).front();
-		iSize=srPvc.mTrackletLookupTable[i].size*sizeof(int);
-	}
-	iTotalSize+=iSize;
-	//std::cout<<"[TrackletLookupTable]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-
-	//srPcv struct
-	iSize=sizeof(srPvc);
-	iTotalSize+=iSize;
-	//std::cout<<"[BaseStruct]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-	std::cout<<"C struct associated with primary vertex initialized: "<<iTotalSize<< " byte"<< std::endl;
-
-	mPrimaryVertexContext.iPrimaryVertexStructSize=iTotalSize;
-	mPrimaryVertexContext.mPrimaryVertexStruct=&srPvc;
+	srPvc.mPrimaryVertex.x=mPrimaryVertexContext.getPrimaryVertex().x;
+	srPvc.mPrimaryVertex.y=mPrimaryVertexContext.getPrimaryVertex().y;
+	srPvc.mPrimaryVertex.z=mPrimaryVertexContext.getPrimaryVertex().z;
 
 	try{
+
+		Float3Struct test;
+		test.x=srPvc.mPrimaryVertex.x;
+		test.y=srPvc.mPrimaryVertex.y;
+		test.y=srPvc.mPrimaryVertex.z;
+		srPvc.bPrimaryVertex = cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				3*sizeof(float),
+				(void *) &test);
+
+		//clusters
+		srPvc.ClusterSize=mPrimaryVertexContext.getClusters().size();
+		for(int i=0;i<srPvc.ClusterSize;i++){
+			srPvc.mClusters[i].size=mPrimaryVertexContext.getClusters()[i].capacity();
+			srPvc.mClusters[i].srPunt=&(mPrimaryVertexContext.getClusters()[i]).front();
+			if(srPvc.mClusters[i].size!=0){
+				srPvc.bClusters[i]=cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+						srPvc.mClusters[i].size*sizeof(ClusterStruct),
+						(void *) &(mPrimaryVertexContext.getClusters()[i]).front());
+			}
+			else
+				srPvc.bClusters[i]=NULL;
+			sizeVector.push_back(srPvc.mClusters[i].size);
+		}
+		srPvc.bClustersSize =cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+						srPvc.ClusterSize*sizeof(int),
+						(void *) &(sizeVector));
+		sizeVector.clear();
+
+		//cells
+		srPvc.CellsSize=mPrimaryVertexContext.getCells().size();
+		for(int i=0;i<srPvc.CellsSize;i++){
+			srPvc.mCells[i].size=mPrimaryVertexContext.getCells()[i].capacity();
+			srPvc.mCells[i].srPunt=&(mPrimaryVertexContext.getCells()[i]).front();
+			if(srPvc.mCells[i].size!=0){
+				srPvc.bCells[i]=cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+						srPvc.mCells[i].size*sizeof(CellStruct),
+						(void *) &(mPrimaryVertexContext.getCells()[i]).front());
+			}
+			else
+				srPvc.bCells[i]=NULL;
+			sizeVector.push_back(srPvc.mCells[i].size);
+		}
+		srPvc.bCellsSize =cl::Buffer(
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+			srPvc.CellsSize*sizeof(int),
+			(void *) &(sizeVector));
+			sizeVector.clear();
+
+		//cellsLookupTable
+		srPvc.CellsLookupTableSize=mPrimaryVertexContext.getCells().size();
+		for(int i=0;i<srPvc.CellsLookupTableSize;i++){
+			srPvc.mCellsLookupTable[i].size=mPrimaryVertexContext.getCellsLookupTable()[i].capacity();
+			srPvc.mCellsLookupTable[i].srPunt=&(mPrimaryVertexContext.getCellsLookupTable()[i]).front();
+			if(srPvc.mCellsLookupTable[i].size!=0){
+				srPvc.bCellsLookupTable[i]=cl::Buffer(
+							oclContext,
+							(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+							srPvc.mCellsLookupTable[i].size*sizeof(int),
+							(void *) &(mPrimaryVertexContext.getCellsLookupTable()[i]).front());
+			}
+			else
+				srPvc.bCellsLookupTable[i]=NULL;
+			sizeVector.push_back(srPvc.mCellsLookupTable[i].size);
+		}
+		srPvc.bCellsLookupTableSize =cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				srPvc.CellsLookupTableSize*sizeof(int),
+				(void *) &(sizeVector));
+		sizeVector.clear();
+
+
+		//indexTable
+		srPvc.IndexTableSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
+		for(int i=0;i<srPvc.IndexTableSize;i++){
+			srPvc.mIndexTable[i].size=mPrimaryVertexContext.getIndexTables()[i].size();
+			srPvc.mIndexTable[i].srPunt=&(mPrimaryVertexContext.getIndexTables()[i]).front();
+			if(srPvc.mIndexTable[i].size!=0){
+				srPvc.bIndexTable[i]=cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+						srPvc.mIndexTable[i].size*sizeof(int),
+						(void *) &(mPrimaryVertexContext.getIndexTables()[i]).front());
+			}
+			else
+				srPvc.bIndexTable[i]=NULL;
+			sizeVector.push_back(srPvc.mIndexTable[i].size);
+		}
+		srPvc.bIndexTableSize =cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+					srPvc.IndexTableSize*sizeof(int),
+					(void *) &(sizeVector));
+		sizeVector.clear();
+
+
+		//tracklets
+		srPvc.TrackeltsSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
+		for(int i=0;i<srPvc.TrackeltsSize;i++){
+			srPvc.mTracklets[i].size=mPrimaryVertexContext.getTracklets()[i].capacity();
+			srPvc.mTracklets[i].srPunt=&(mPrimaryVertexContext.getTracklets()[i]).front();
+			if(srPvc.mTracklets[i].size!=0){
+				srPvc.bTracklets[i]=cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+						srPvc.mTracklets[i].size*sizeof(TrackletStruct),
+						(void *) &(mPrimaryVertexContext.getTracklets()[i]).front());
+			}
+			else
+				srPvc.bTracklets[i]=NULL;
+			sizeVector.push_back(srPvc.mTracklets[i].size);
+		}
+		srPvc.bTrackletsSize =cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+					srPvc.TrackeltsSize*sizeof(TrackletStruct),
+					(void *) &(sizeVector));
+		sizeVector.clear();
+
+
+
+		//trackletLookupTable
+		srPvc.TrackletLookupTableSize=mPrimaryVertexContext.getTrackletsLookupTable().size();
+		for(int i=0;i<srPvc.CellsLookupTableSize;i++){
+			srPvc.mTrackletLookupTable[i].size=mPrimaryVertexContext.getTrackletsLookupTable()[i].capacity();
+			srPvc.mTrackletLookupTable[i].srPunt=&(mPrimaryVertexContext.getTrackletsLookupTable()[i]).front();
+			if(srPvc.mTrackletLookupTable[i].size!=0){
+				srPvc.bTrackletLookupTable[i]=cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+					srPvc.mTrackletLookupTable[i].size*sizeof(int),
+					(void *) &(mPrimaryVertexContext.getTracklets()[i]).front());
+					sizeVector.push_back(srPvc.mTrackletLookupTable[i].size);
+			}
+			else
+				srPvc.bTrackletLookupTable[i]=NULL;
+			sizeVector.push_back(srPvc.mTrackletLookupTable[i].size);
+		}
+		srPvc.bTrackletLookupTableSize =cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+					srPvc.TrackletLookupTableSize*sizeof(int),
+					(void *) &(sizeVector));
+		sizeVector.clear();
+
+		//std::cout<<"[BaseStruct]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
+		std::cout<<"C struct associated with primary vertex initialized"<< std::endl;
+
+
+		mPrimaryVertexContext.mPrimaryVertexStruct=&srPvc;
+
+/*
 		cl::Context oclContext;
 		cl::Device  oclDevice;
 
@@ -138,14 +235,7 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 
 		std::vector<cl::Device> devices;
 		devices.push_back(oclDevice);
-
-
-
-		mPrimaryVertexContext.mPrimaryVertexBuffer=cl::Buffer(
-					oclContext,
-					CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
-					iTotalSize,
-					(void*)&srPvc);
+*/
 
 	}
 	catch(const cl::Error &err){
@@ -157,8 +247,6 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 
 	return;
 }
-
-
 
 
 

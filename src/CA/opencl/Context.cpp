@@ -17,7 +17,7 @@
 #include "ITSReconstruction/CA/gpu/Utils.h"
 
 
-#define __CL_ENABLE_EXCEPTIONS //abilita le eccezioni
+//#define __CL_ENABLE_EXCEPTIONS //abilita le eccezioni
 
 
 #define AMD_WAVEFRONT 		0x4043
@@ -62,10 +62,10 @@ Context::Context()
 		iPlatformList=platformList.size();
 		// Pick first platform
 
-		std::cout << "There are " << iPlatformList << " platform" << std::endl;
-		std::cout << std::endl;
+		//std::cout << "There are " << iPlatformList << " platform" << std::endl;
+		//std::cout << std::endl;
 		for(int iPlatForm=0;iPlatForm<(int)iPlatformList;iPlatForm++){
-			std::cout << "Platform #" << iPlatForm+1 << std::endl;
+			//std::cout << "Platform #" << iPlatForm+1 << std::endl;
 			cl_context_properties cprops[] = {
 				CL_CONTEXT_PLATFORM, (cl_context_properties)(platformList[iPlatForm])(), 0};
 			cl::Context context(CL_DEVICE_TYPE_ALL, cprops);
@@ -73,11 +73,11 @@ Context::Context()
 
 			//print platform information
 			platformList[iPlatForm].getInfo(CL_PLATFORM_NAME,&info);
-			std::cout << "Name:" 	<< info << std::endl;
+			//std::cout << "Name:" 	<< info << std::endl;
 			platformList[iPlatForm].getInfo(CL_PLATFORM_VENDOR,&info);
-			std::cout << "Vendor:"	<< info << std::endl;
+			//std::cout << "Vendor:"	<< info << std::endl;
 			platformList[iPlatForm].getInfo(CL_PLATFORM_VERSION,&info);
-			std::cout << "Version: "<< info << std::endl;
+			//std::cout << "Version: "<< info << std::endl;
 
 
 			// Get devices associated with the first platform
@@ -85,40 +85,40 @@ Context::Context()
 			mDevicesNum=deviceList.size();
 			mDeviceProperties.resize(iTotalDevice+mDevicesNum, DeviceProperties { });
 
-			std::cout << "There are " << mDevicesNum << " devices" << std::endl;
+			//std::cout << "There are " << mDevicesNum << " devices" << std::endl;
 
 			for(int iDevice=0;iDevice<mDevicesNum;iDevice++){
 
 				std::string name;
 				deviceList[iDevice].getInfo(CL_DEVICE_NAME,&(mDeviceProperties[iTotalDevice].name));
-				std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
+				//std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
 
 				//compute number of compute units (cores)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS,&(mDeviceProperties[iTotalDevice].maxComputeUnits));
-				std::cout << "		Compute units: " << mDeviceProperties[iTotalDevice].maxComputeUnits << std::endl;
+				//std::cout << "		Compute units: " << mDeviceProperties[iTotalDevice].maxComputeUnits << std::endl;
 
 				//compute device global memory size
 				deviceList[iDevice].getInfo(CL_DEVICE_GLOBAL_MEM_SIZE,&(mDeviceProperties[iTotalDevice].globalMemorySize));
-				std::cout << "		Device Global Memory: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
+				//std::cout << "		Device Global Memory: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
 
 				//compute the max number of work-item in a work group executing a kernel (refer to clEnqueueNDRangeKernel)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE,&(mDeviceProperties[iTotalDevice].maxWorkGroupSize));
-				std::cout << "		Max work-group size: " << mDeviceProperties[iTotalDevice].maxWorkGroupSize << std::endl;
+				//std::cout << "		Max work-group size: " << mDeviceProperties[iTotalDevice].maxWorkGroupSize << std::endl;
 
 				//compute the max work-item dimension
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,&(mDeviceProperties[iTotalDevice].maxWorkItemDimension));
-				std::cout << "		Max work-item dimension: " << mDeviceProperties[iTotalDevice].maxWorkItemDimension << std::endl;
+				//std::cout << "		Max work-item dimension: " << mDeviceProperties[iTotalDevice].maxWorkItemDimension << std::endl;
 
 				//compute the max number of work-item that can be specified in each dimension of the work-group to clEnqueueNDRangeKernel
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES,&(sizeDim));
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.x=sizeDim[0];
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.y=sizeDim[1];
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.z=sizeDim[2];
-				std::cout << "		Max work-item Sizes: [" << mDeviceProperties[iTotalDevice].maxWorkItemSize.x << "," << mDeviceProperties[iTotalDevice].maxWorkItemSize.y << ","<< mDeviceProperties[iTotalDevice].maxWorkItemSize.z << "]"<< std::endl;
+				//std::cout << "		Max work-item Sizes: [" << mDeviceProperties[iTotalDevice].maxWorkItemSize.x << "," << mDeviceProperties[iTotalDevice].maxWorkItemSize.y << ","<< mDeviceProperties[iTotalDevice].maxWorkItemSize.z << "]"<< std::endl;
 
 				//get vendor name to obtain the warps size
 				deviceList[iDevice].getInfo(CL_DEVICE_VENDOR,&(mDeviceProperties[iTotalDevice].vendor));
-				std::cout << "		Device vendor: " << mDeviceProperties[iTotalDevice].vendor << std::endl;
+				//std::cout << "		Device vendor: " << mDeviceProperties[iTotalDevice].vendor << std::endl;
 				if(mDeviceProperties[iTotalDevice].vendor.find("NVIDIA")!=std::string::npos){
 					//std::cout<<">> NVIDIA" << std::endl;
 					deviceList[iDevice].getInfo(NVIDIA_WAVEFRONT,&(mDeviceProperties[iTotalDevice].warpSize));
@@ -132,7 +132,7 @@ Context::Context()
 					mDeviceProperties[iTotalDevice].warpSize=16;
 				}
 
-				std::cout << "		Warps size: " << mDeviceProperties[iTotalDevice].warpSize << std::endl;
+				//std::cout << "		Warps size: " << mDeviceProperties[iTotalDevice].warpSize << std::endl;
 
 
 
@@ -145,21 +145,27 @@ Context::Context()
 				iTotalDevice++;
 			}
 
-			std::cout << std::endl;
+			//std::cout << std::endl;
 		}
 
 
 	}
 	catch(const cl::Error &err){
 		std::string errString=Utils::OCLErr_code(err.err());
-		std::cout<< errString << std::endl;
+		//std::cout<< errString << std::endl;
 		throw std::runtime_error { errString };
 	}
 
 	iCurrentDevice=0;
-	std::cout << std::endl<< ">> First device is selected" << std::endl;
-
-
+	//std::cout << std::endl<< ">> First device is selected" << std::endl;
+	//create command queue associated to selected device
+	try{
+		mDeviceProperties[iCurrentDevice].oclQueue=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, 0);
+	}catch(const cl::Error &err){
+			std::string errString=Utils::OCLErr_code(err.err());
+			//std::cout<< errString << std::endl;
+			throw std::runtime_error { errString };
+		}
 
 
 }
