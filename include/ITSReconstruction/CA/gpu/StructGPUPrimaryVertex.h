@@ -20,10 +20,10 @@
 #include "CL/cl.hpp"
 
 
-typedef struct __attribute__ ((packed)) float3Struct{
-		float x;
-		float y;
-		float z;
+	typedef struct __attribute__ ((packed)) float3Struct{
+		cl_float x;
+		cl_float y;
+		cl_float z;
 	}Float3Struct;
 
 	typedef struct{

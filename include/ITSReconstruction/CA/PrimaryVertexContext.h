@@ -32,7 +32,7 @@
 # include "ITSReconstruction/CA/gpu/UniquePointer.h"
 #endif
 
-#if TRACKINGITSU_OCL_MODE_MODE
+#if TRACKINGITSU_OCL_MODE
 #include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
 #include "CL/cl.hpp"
 #endif
@@ -85,7 +85,7 @@ class PrimaryVertexContext
 //#endif
 
 #if TRACKINGITSU_OCL_MODE
-        void *mPrimaryVertexStruct;
+        PrimaryVertexContestStruct mPrimaryVertexStruct;
         int  iPrimaryVertexStructSize;
         cl::Buffer mPrimaryVertexBuffer;
 #endif

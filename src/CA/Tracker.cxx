@@ -50,8 +50,7 @@ namespace CA
 {
 
 void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
-	int iSize=0;
-	int iTotalSize=0;
+
 	PrimaryVertexContestStruct srPvc;
 	std::vector<int> sizeVector;
 
@@ -65,15 +64,14 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 
 	try{
 
-		Float3Struct test;
-		test.x=srPvc.mPrimaryVertex.x;
-		test.y=srPvc.mPrimaryVertex.y;
-		test.y=srPvc.mPrimaryVertex.z;
+
 		srPvc.bPrimaryVertex = cl::Buffer(
-				oclContext,
-				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				3*sizeof(float),
-				(void *) &test);
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+			3*sizeof(float),
+			(void *) &mPrimaryVertexContext.getPrimaryVertex());
+
+//		oclKernel.setArg(0,srPvc.bPrimaryVertex);
 
 		//clusters
 		srPvc.ClusterSize=mPrimaryVertexContext.getClusters().size();
@@ -187,7 +185,7 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 		}
 		srPvc.bTrackletsSize =cl::Buffer(
 					oclContext,
-					(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					srPvc.TrackeltsSize*sizeof(TrackletStruct),
 					(void *) &(sizeVector));
 		sizeVector.clear();
@@ -222,7 +220,7 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 		std::cout<<"C struct associated with primary vertex initialized"<< std::endl;
 
 
-		mPrimaryVertexContext.mPrimaryVertexStruct=&srPvc;
+		mPrimaryVertexContext.mPrimaryVertexStruct=srPvc;
 
 /*
 		cl::Context oclContext;
@@ -236,6 +234,7 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 		std::vector<cl::Device> devices;
 		devices.push_back(oclDevice);
 */
+//		oclKernel.setArg(0,srPvc.bPrimaryVertex);
 
 	}
 	catch(const cl::Error &err){

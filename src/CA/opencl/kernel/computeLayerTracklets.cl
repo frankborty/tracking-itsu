@@ -41,7 +41,7 @@ __constant float InverseZBinSize[7]=  {0.5f * 20 / 16.333f, 0.5f * 20 / 16.333f,
 		int w;
 	}Int4Struct;
 
-	typedef struct __attribute__ ((packed)) float3Struct{
+	typedef struct{
 		float x;
 		float y;
 		float z;
@@ -88,30 +88,6 @@ __constant float InverseZBinSize[7]=  {0.5f * 20 / 16.333f, 0.5f * 20 / 16.333f,
 		void * srPunt;
 		int size;
 	}VectStruct;
-
-	typedef struct {
-		Float3Struct* mPrimaryVertex;
-		int ClusterSize;
-		VectStruct mClusters[7];
-		int CellsSize;
-		VectStruct mCells[5];
-		int CellsLookupTableSize;
-		VectStruct mCellsLookupTable[4];
-		int IndexTableSize;
-		VectStruct mIndexTable[401];
-		int TrackeltsSize;
-		VectStruct mTracklets[6];
-		int TrackletLookupTableSize;
-		VectStruct mTrackletLookupTable[5];
-		/*int IndexTableX;
-		int IndexTavleY;
-		int **mIndexTable;
-		int CellsNeighX;
-		int CellsNeighY;
-		int *mCellsNeigh;
-		int RoadsSize;
-		VectStruct mRoads;*/
-	}PrimaryVertexContestStruct;
 
 double myAbs(double iNum){
 	if(iNum<0)
@@ -182,106 +158,72 @@ int getBinIndex(int zIndex,int phiIndex)
 
 
 __kernel void computeLayerTracklets(
-					__global Float3Struct* primaryVertex,
-					__global ClusterStruct* currentLayerClusters,
-					__global ClusterStruct* nextLayerClusters,__global int * currentLayerIndexTable,
-					__global int * currentLayerTrackletsLookupTable,
-					__global int * previousLayerTrackletsLookupTable,
-					__global TrackletStruct* currentLayerTrackelts,
-					__global int *currentLayerTrackletsCapacity,
-					__global int *currentLayerTrackletsSize,
-					__global int *iCurrentLayer)
+					__global Float3Struct* primaryVertex,	//0
+					__global ClusterStruct* currentLayerClusters, //1
+					__global ClusterStruct* nextLayerClusters, //2
+					__global int * currentLayerIndexTable, //3
+					__global int * currentLayerTrackletsLookupTable, //4
+					__global int * previousLayerTrackletsLookupTable, //5
+					__global TrackletStruct* currentLayerTrackelts, //6
+					__global int *currentLayerTrackletsCapacity, //7
+					__global int *currentLayerTrackletsSize, //8
+					__global int *iCurrentLayer) //9
+					
 {
-	//std::cout<<"kernel function"<<std::endl;
-	int iCluster=0; //lo trovo con l'id
+
+	int iCluster=get_global_id(0); //lo trovo con l'id
 	int iLayer=*iCurrentLayer;
-	//<<PrimaryVertexContestStruct* primaryVertexContext;
-	//<<primaryVertexContext=(PrimaryVertexContestStruct*)x;
 
 
-	//const Cluster& currentCluster { primaryVertexContext.getClusters()[iLayer][iCluster] };
-	//<<ClusterStruct *clusterArray=(ClusterStruct*)primaryVertexContext->mClusters[iLayer].srPunt;
 	__global ClusterStruct *currentCluster=&currentLayerClusters[iCluster];
 
-	//<<Float3Struct* primaryVertex=primaryVertexContext->mPrimaryVertex;
 
 
-	//const float tanLambda { (currentCluster.zCoordinate - primaryVertex.z) / currentCluster.rCoordinate };
 	float tanLambda=(currentCluster->zCoordinate-primaryVertex->z)/currentCluster->rCoordinate;
 
-	//const float directionZIntersection { tanLambda * (Constants::ITS::LayersRCoordinate()[iLayer + 1] - currentCluster.rCoordinate)+ currentCluster.zCoordinate };
 	float directionZIntersection= tanLambda*(LayersRCoordinate[iLayer+1]-currentCluster->rCoordinate)+currentCluster->zCoordinate;
 
 
-	//const int4 selectedBinsRect { TrackingUtils::getBinsRect(currentCluster, iLayer, directionZIntersection) };
 	Int4Struct selectedBinsRect=getBinsRect(currentCluster,iLayer,directionZIntersection);
 
 	if (selectedBinsRect.x == 0 && selectedBinsRect.y == 0 && selectedBinsRect.z == 0 && selectedBinsRect.w == 0) {
 		return;
 	}
 
-	//int phiBinsNum { selectedBinsRect.w - selectedBinsRect.y + 1 };
 	int phiBinsNum=selectedBinsRect.w-selectedBinsRect.y+1;
 
 
 	if (phiBinsNum < 0) {
-		//phiBinsNum += Constants::IndexTable::PhiBins;
 		phiBinsNum+=PhiBins;
 	}
-
-//	for (int iPhiBin { selectedBinsRect.y }, iPhiCount { 0 }; iPhiCount < phiBinsNum;
-//	  iPhiBin = ++iPhiBin == Constants::IndexTable::PhiBins ? 0 : iPhiBin, iPhiCount++) {
 
 	int iPhiBin,iPhiCount;
 	for(iPhiBin=selectedBinsRect.y,iPhiCount=0;iPhiCount<PhiBins;iPhiBin = ++iPhiBin == PhiBins ? 0 : iPhiBin, iPhiCount++){
 
-/*
-		const int firstBinIndex { IndexTableUtils::getBinIndex(selectedBinsRect.x, iPhiBin) };
-		const int maxBinIndex { firstBinIndex + selectedBinsRect.z - selectedBinsRect.x + 1 };
-		const int firstRowClusterIndex = primaryVertexContext.getIndexTables()[iLayer][firstBinIndex];
-		const int maxRowClusterIndex = primaryVertexContext.getIndexTables()[iLayer][maxBinIndex];
-	*/
 
 		int firstBinIndex=getBinIndex(selectedBinsRect.x, iPhiBin);
 		int maxBinIndex=firstBinIndex + selectedBinsRect.z - selectedBinsRect.x + 1;
 		int firstRowClusterIndex = currentLayerIndexTable[firstBinIndex];
 		int maxRowClusterIndex = currentLayerIndexTable[maxBinIndex];
 
-	/*
-		for (int iNextLayerCluster { firstRowClusterIndex }; iNextLayerCluster <= maxRowClusterIndex;
-			++iNextLayerCluster) {
-	*/
 		int iNextLayerCluster;
 		for (iNextLayerCluster=firstRowClusterIndex; iNextLayerCluster <= maxRowClusterIndex;++iNextLayerCluster) {
-			//const Cluster& nextCluster { primaryVertexContext.getClusters()[iLayer + 1][iNextLayerCluster] };
-			//ClusterStruct nextCluster=((ClusterStruct*)primaryVertexContext->mClusters[iLayer+1].srPunt)[iNextLayerCluster];
-			//ClusterStruct *nextCluster=&((ClusterStruct*)primaryVertexContext->mClusters[iLayer+1].srPunt)[iNextLayerCluster];
 			__global ClusterStruct *nextCluster=&nextLayerClusters[iNextLayerCluster];
 
 
 
-			//const float deltaZ { MATH_ABS( tanLambda * (nextCluster.rCoordinate - currentCluster.rCoordinate) + currentCluster.zCoordinate- nextCluster.zCoordinate) };
 			float deltaZ=myAbs(tanLambda*(nextCluster->rCoordinate-currentCluster->rCoordinate)+currentCluster->zCoordinate - nextCluster->zCoordinate);
 
 
-			// const float deltaPhi { MATH_ABS(currentCluster.phiCoordinate - nextCluster.phiCoordinate) };
 			float deltaPhi=myAbs(currentCluster->phiCoordinate - nextCluster->phiCoordinate);
 
-			/*if (deltaZ < Constants::Thresholds::TrackletMaxDeltaZThreshold()[iLayer]
-			  && (deltaPhi < Constants::Thresholds::PhiCoordinateCut
-				  || MATH_ABS(deltaPhi - Constants::Math::TwoPi) < Constants::Thresholds::PhiCoordinateCut)) {
-			 */
 			int iTrackletLookupTableIndex=previousLayerTrackletsLookupTable[iCluster];
 
 			if(deltaZ<TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || myAbs(deltaPhi-TwoPi)<PhiCoordinateCut)){
-				//if (iLayer > 0	&& primaryVertexContext.getTrackletsLookupTable()[iLayer - 1][iCluster] == Constants::ITS::UnusedIndex) {
 				if (iLayer > 0	&& iTrackletLookupTableIndex == UnusedIndex) {
-					 //primaryVertexContext.getTrackletsLookupTable()[iLayer - 1][iCluster] =primaryVertexContext.getTracklets()[iLayer].size();
-					 //primaryVertexContext->mTrackletLookupTable[iLayer-1].srPunt[iCluster]=primaryVertexContext->mTracklets[iLayer].size;
 					iTrackletLookupTableIndex=1;
 				}
 
-				//primaryVertexContext.getTracklets()[iLayer].emplace_back(iCluster, iNextLayerCluster, currentCluster,nextCluster);
 				int iTrackletCount=*currentLayerTrackletsCapacity;
 				__global TrackletStruct* tracklet=&currentLayerTrackelts[iTrackletCount];
 
@@ -296,5 +238,3 @@ __kernel void computeLayerTracklets(
 
 	return;
 }
-
-

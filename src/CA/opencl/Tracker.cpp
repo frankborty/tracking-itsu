@@ -300,53 +300,83 @@ template<>
 void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
 {
 	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
-	int i;
+
 try{
-	int iLayer=0;
+
 
 	//creo il kernel
 	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
 	cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
 	cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
-	PrimaryVertexContestStruct *pvcStruct=(PrimaryVertexContestStruct*)primaryVertexContext.mPrimaryVertexStruct;
+	PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
 	cl::Kernel oclKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
-
-
-	// Map cBuffer to host pointer. This enforces a sync with
-	// the host backing space, remember we choose GPU device.
-	/*int * output = (int *) oclCommandQueue.enqueueMapBuffer(
-		cBuffer,
-		CL_TRUE, // block
-		CL_MAP_READ,
-		0,
-		BUFFER_SIZE * sizeof(int));
-
-	for (int i = 0; i < BUFFER_SIZE; i++) {
-		std::cout << C[i] << " ";
-	}*/
-	std::cout << std::endl;
 
 
 	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
 		std::cout<< "OpenClKernel for compute trackelts between Layer "<<iLayer<<" and "<< iLayer+1<< std::endl;
 
-		// Set kernel args
-		oclKernel.setArg(0, pvcStruct->bPrimaryVertex);
-		oclKernel.setArg(1, pvcStruct->bClusters[iLayer]);
-		oclKernel.setArg(2, pvcStruct->bClusters[iLayer+1]);
-		oclKernel.setArg(3, pvcStruct->bIndexTable[iLayer]);
-		oclKernel.setArg(4, pvcStruct->bTrackletLookupTable[iLayer]);
-		oclKernel.setArg(5, pvcStruct->bTrackletLookupTable[iLayer-1]);
-		oclKernel.setArg(6, pvcStruct->bTrackletsSize);
-		oclKernel.setArg(7, pvcStruct->bIndexTable[iLayer]);
-		oclKernel.setArg(8, pvcStruct->bIndexTable[iLayer]);
+
+
+		//dichiaro un fakeBuffer per la creazione dei tracklet tra i primi due layer
+		int fakeVector[10];
+		int trackletSize[50000];
+		cl::Buffer fakeBuff = cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+						10*sizeof(int),
+						(void *) &fakeVector);
+
+		cl::Buffer iLayerID = cl::Buffer(
+								oclContext,
+								(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+								sizeof(int),
+								(void *) &iLayer);
+
+		cl::Buffer sizeBuff = cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+						50000*sizeof(int),
+						(void *) &trackletSize);
+
+
+
+		oclKernel.setArg(0, pvcStruct.bPrimaryVertex);
+		oclKernel.setArg(1, pvcStruct.bClusters[iLayer]);
+		oclKernel.setArg(2, pvcStruct.bClusters[iLayer+1]);
+		oclKernel.setArg(3, pvcStruct.bIndexTable[iLayer]);
+		oclKernel.setArg(4, pvcStruct.bTrackletLookupTable[iLayer]);
+		if(iLayer==0)
+			oclKernel.setArg(5,fakeBuff);
+		else
+			oclKernel.setArg(5, pvcStruct.bTrackletLookupTable[iLayer-1]);
+		oclKernel.setArg(6, pvcStruct.bTracklets[iLayer]);
+		oclKernel.setArg(7, pvcStruct.bTrackletsSize);
+		oclKernel.setArg(8, sizeBuff);
+		oclKernel.setArg(9, iLayerID);
 
 			// Do the work
-			oclCommandQueue.enqueueNDRangeKernel(
-				oclKernel,
-				cl::NullRange,
-				cl::NDRange(BUFFER_SIZE),
-				cl::NullRange);
+		oclCommandQueue.enqueueNDRangeKernel(
+			oclKernel,
+			cl::NullRange,
+			cl::NDRange(pvcStruct.mClusters[iLayer].size),
+			cl::NullRange);
+
+		int* iTrackletSize = (int *) oclCommandQueue.enqueueMapBuffer(
+				sizeBuff,
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				sizeof(int));
+
+		TrackletStruct* output = (TrackletStruct *) oclCommandQueue.enqueueMapBuffer(
+				pvcStruct.bTracklets[iLayer],
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				(*iTrackletSize) * sizeof(int));
+
+		std::cout<< output->tanLambda << std::endl;
+		//memcpy(A,aoutput,LEN*sizeof(int));
 
 	}
 }
