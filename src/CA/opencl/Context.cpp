@@ -66,9 +66,17 @@ Context::Context()
 		//std::cout << std::endl;
 		for(int iPlatForm=0;iPlatForm<(int)iPlatformList;iPlatForm++){
 			//std::cout << "Platform #" << iPlatForm+1 << std::endl;
-			cl_context_properties cprops[] = {
+			cl::Context context;
+			try{
+				cl_context_properties cprops[] = {
 				CL_CONTEXT_PLATFORM, (cl_context_properties)(platformList[iPlatForm])(), 0};
-			cl::Context context(CL_DEVICE_TYPE_ALL, cprops);
+				context=cl::Context(CL_DEVICE_TYPE_ALL, cprops);
+			}
+			catch(const cl::Error &err){
+					std::string errString=Utils::OCLErr_code(err.err());
+					std::cout<<"No device found for platform #"<<iPlatForm<< std::endl;
+					continue;
+			}
 
 
 			//print platform information
@@ -91,19 +99,23 @@ Context::Context()
 
 				std::string name;
 				deviceList[iDevice].getInfo(CL_DEVICE_NAME,&(mDeviceProperties[iTotalDevice].name));
-				//std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
+				std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
 
 				//compute number of compute units (cores)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS,&(mDeviceProperties[iTotalDevice].maxComputeUnits));
 				//std::cout << "		Compute units: " << mDeviceProperties[iTotalDevice].maxComputeUnits << std::endl;
 
+				//compute max device alloc size
+				deviceList[iDevice].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE,&(mDeviceProperties[iTotalDevice].globalMemorySize));
+				std::cout << "		Device Max Device Alloc Size: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
+
 				//compute device global memory size
 				deviceList[iDevice].getInfo(CL_DEVICE_GLOBAL_MEM_SIZE,&(mDeviceProperties[iTotalDevice].globalMemorySize));
-				//std::cout << "		Device Global Memory: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
+				std::cout << "		Device Global Memory: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
 
 				//compute the max number of work-item in a work group executing a kernel (refer to clEnqueueNDRangeKernel)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE,&(mDeviceProperties[iTotalDevice].maxWorkGroupSize));
-				//std::cout << "		Max work-group size: " << mDeviceProperties[iTotalDevice].maxWorkGroupSize << std::endl;
+				std::cout << "		Max work-group size: " << mDeviceProperties[iTotalDevice].maxWorkGroupSize << std::endl;
 
 				//compute the max work-item dimension
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,&(mDeviceProperties[iTotalDevice].maxWorkItemDimension));
@@ -114,7 +126,7 @@ Context::Context()
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.x=sizeDim[0];
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.y=sizeDim[1];
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.z=sizeDim[2];
-				//std::cout << "		Max work-item Sizes: [" << mDeviceProperties[iTotalDevice].maxWorkItemSize.x << "," << mDeviceProperties[iTotalDevice].maxWorkItemSize.y << ","<< mDeviceProperties[iTotalDevice].maxWorkItemSize.z << "]"<< std::endl;
+				std::cout << "		Max work-item Sizes: [" << mDeviceProperties[iTotalDevice].maxWorkItemSize.x << "," << mDeviceProperties[iTotalDevice].maxWorkItemSize.y << ","<< mDeviceProperties[iTotalDevice].maxWorkItemSize.z << "]"<< std::endl;
 
 				//get vendor name to obtain the warps size
 				deviceList[iDevice].getInfo(CL_DEVICE_VENDOR,&(mDeviceProperties[iTotalDevice].vendor));
@@ -152,11 +164,10 @@ Context::Context()
 	}
 	catch(const cl::Error &err){
 		std::string errString=Utils::OCLErr_code(err.err());
-		//std::cout<< errString << std::endl;
 		throw std::runtime_error { errString };
 	}
 
-	iCurrentDevice=0;
+	iCurrentDevice=1;
 	//std::cout << std::endl<< ">> First device is selected" << std::endl;
 	//create command queue associated to selected device
 	try{

@@ -78,54 +78,6 @@ namespace GPU
 {
 
 
-/*
-cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDevice, const char* fileName,const char* kernelName){
-	std::cout << "CreateKernelFromFile: "<<fileName << std::endl;
-	cl::Program::Sources sources;
-	std::ostringstream oss;
-	std::string srcStdStr;
-	try{
-		std::ifstream kernelFile(fileName, std::ios::in);
-		if (!kernelFile.is_open())
-		{
-			std::cerr << "Failed to open file for reading: " << fileName << std::endl;
-			return cl::Kernel();
-		}
-
-
-		oss << kernelFile.rdbuf();
-
-		srcStdStr = oss.str();
-		//std::cerr<<srcStr<< std::endl;
-
-
-		sources.push_back({srcStdStr.c_str(),srcStdStr.length()});
-	}
-	catch (...) {
-		std::cout << "Errore"<< std::endl;
-	}
-	cl::Program program(oclContext,sources);
-	try{
-
-		program.build({oclDevice});
-
-		return cl::Kernel(program,kernelName);
-	}
-	catch(const cl::Error &err){
-		size_t len;
-		/*char *buffer;
-		clGetProgramBuildInfo(program, &device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
-		buffer = calloc(len);
-		clGetProgramBuildInfo(program, &device_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
-		printf("%s\n", buffer);
-		std::string errString=Utils::OCLErr_code(err.err());
-		std::cout<< errString  << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice)<< std::endl;
-		throw std::runtime_error { errString };
-	}
-	std::cout<<"FINE CREATE KERNEL"<<std::endl;
-}
-*/
-
 cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDevice, const char* fileName,const char* kernelName){
 	std::cout << "CreateKernelFromFile: "<<fileName <<"... ";
 
@@ -147,8 +99,9 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 
 	cl::Program program(oclContext,sources);
 	try{
-
-		program.build({oclDevice});
+		std::vector<cl::Device> oclDeviceList;
+		oclDeviceList.push_back(oclDevice);
+		program.build(oclDeviceList);
 		return cl::Kernel(program,kernelName);
 	}
 	catch(const cl::Error &err){

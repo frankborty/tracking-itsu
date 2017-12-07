@@ -46,14 +46,14 @@
 		const int mSecondTrackletIndex;
 		Float3Struct mNormalVectorCoordinates;
 		const float mCurvature;
-	int mLevel;
+		int mLevel;
 	}CellStruct;
 
 	typedef struct{
-		const int firstClusterIndex;
-		const int secondClusterIndex;
-		const float tanLambda;
-		const float phiCoordinate;
+		int firstClusterIndex;
+		int secondClusterIndex;
+		float tanLambda;
+		float phiCoordinate;
 	}TrackletStruct;
 
 	typedef struct{

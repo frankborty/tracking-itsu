@@ -98,9 +98,9 @@ __device__ void fillCellsPerClusterTables(GPU::PrimaryVertexContext &primaryVert
   }
 }
 */
-void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
-{
-	std::cout<< "fillDeviceStructures()" << std::endl;
+//void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const int layerIndex)
+//{
+//	std::cout<< "fillDeviceStructures()" << std::endl;
 
   /*fillIndexTables(primaryVertexContext, layerIndex);
 
@@ -114,7 +114,7 @@ void fillDeviceStructures(GPU::PrimaryVertexContext &primaryVertexContext, const
     fillCellsPerClusterTables(primaryVertexContext, layerIndex);
   }
   */
-}
+//}
 
 }
 

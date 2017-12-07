@@ -12,12 +12,8 @@
 /// \brief
 ///
 
-#include "ITSReconstruction/CA/gpu/Context.h"
-
-#include <sstream>
-#include <stdexcept>
-
 #include <cuda_runtime.h>
+#include <Context.h>
 
 namespace {
 inline void checkCUDAError(const cudaError_t error, const char *file, const int line)
