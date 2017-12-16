@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     std::cerr << "Please, provide a data file." << std::endl;
     exit(EXIT_FAILURE);
   }
-
+#if TRACKINGITSU_GPU_MODE
   if (argc>= 3) {
 	  myWorkGroupSize=atoi(argv[2]);
   }
@@ -65,6 +65,7 @@ int main(int argc, char** argv)
   else
 	*/  myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   //std::cout<<"PhiCut="<<myPhiThreshold<<"	-	WorkGroup="<<myWorkGroupSize<<std::endl;
+#endif
   std::string eventsFileName(argv[1]);
   std::string benchmarkFolderName = getDirectory(eventsFileName);
   std::vector<Event> events = IOUtils::loadEventData(eventsFileName);

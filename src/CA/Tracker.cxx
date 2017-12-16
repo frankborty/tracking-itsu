@@ -48,7 +48,7 @@ namespace ITS
 {
 namespace CA
 {
-
+#if TRACKINGITSU_GPU_MODE
 void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 
 	PrimaryVertexContestStruct srPvc;
@@ -247,7 +247,7 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 
 	return;
 }
-
+#endif
 
 
 
@@ -464,7 +464,9 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
 	mPrimaryVertexContext.initialize(event, iVertex);
 
 	//fill c struct associated to primary vertex
+#if TRACKINGITSU_GPU_MODE
 	fillPrimaryVertexStruct(mPrimaryVertexContext);
+#endif
 	clock_t t1,t2;
 	t1=clock();
 	computeTracklets();
