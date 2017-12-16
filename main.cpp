@@ -14,6 +14,10 @@
 
 #if TRACKINGITSU_GPU_MODE
 # include "ITSReconstruction/CA/gpu/Utils.h"
+#include "ITSReconstruction/CA/gpu/myThresholds.h"
+float myPhiThreshold;
+float myZThreshold;
+int myWorkGroupSize;
 #endif
 
 using namespace o2::ITS::CA;
@@ -26,7 +30,7 @@ std::string getDirectory(const std::string& fname)
 
 int main(int argc, char** argv)
 {
-
+/*
 #if TRACKINGITSU_CUDA_MODE
 	std::cout << ">> CUDA MODE"<< std::endl;
 #elif TRACKINGITSU_OCL_MODE
@@ -34,13 +38,33 @@ int main(int argc, char** argv)
 #else
 	std::cout << ">> CPU MODE"<< std::endl;
 #endif
-
+*/
 
   if (argv[1] == NULL) {
     std::cerr << "Please, provide a data file." << std::endl;
     exit(EXIT_FAILURE);
   }
 
+  if (argc>= 3) {
+	  myWorkGroupSize=atoi(argv[2]);
+  }
+  else
+	  myWorkGroupSize=16;
+
+  /*
+  if (argc>= 3) {
+      myPhiThreshold=atof(argv[2]);
+  }
+  else*/
+	  myPhiThreshold=Constants::Thresholds::PhiCoordinateCut;
+/*
+  if (argc>=4) {
+	  std::cout<<"myZ="<<myZThreshold<<std::endl;
+  }
+  *
+  else
+	*/  myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
+  //std::cout<<"PhiCut="<<myPhiThreshold<<"	-	WorkGroup="<<myWorkGroupSize<<std::endl;
   std::string eventsFileName(argv[1]);
   std::string benchmarkFolderName = getDirectory(eventsFileName);
   std::vector<Event> events = IOUtils::loadEventData(eventsFileName);
@@ -51,7 +75,7 @@ int main(int argc, char** argv)
   }
 
   std::vector<std::unordered_map<int, Label>> labelsMap;
-  //bool createBenchmarkData = false;
+  bool createBenchmarkData = false;
   std::ofstream correctRoadsOutputStream;
   std::ofstream duplicateRoadsOutputStream;
   std::ofstream fakeRoadsOutputStream;
@@ -60,7 +84,7 @@ int main(int argc, char** argv)
     verticesNum += events[iEvent].getPrimaryVerticesNum();
   }
 
-
+/*
   if (argv[2] != NULL) {
 
     std::string labelsFileName(argv[2]);
@@ -72,7 +96,8 @@ int main(int argc, char** argv)
     duplicateRoadsOutputStream.open(benchmarkFolderName + "DuplicateRoads.txt");
     fakeRoadsOutputStream.open(benchmarkFolderName + "FakeRoads.txt");
   }
-/*
+  */
+
   clock_t t1, t2;
   float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
 #if defined MEMORY_BENCHMARK
@@ -82,11 +107,11 @@ int main(int argc, char** argv)
   std::ofstream timeBenchmarkOutputStream;
   timeBenchmarkOutputStream.open(benchmarkFolderName + "TimeOccupancy.txt");
 #endif
-*/
+
   // Prevent cold cache benchmark noise
   Tracker<TRACKINGITSU_GPU_MODE> tracker{};
   tracker.clustersToTracks(events[0]);
-/*
+
 #if defined GPU_PROFILING_MODE
   Utils::Host::gpuStartProfiler();
 #endif
@@ -162,8 +187,8 @@ int main(int argc, char** argv)
   std::cout << "Avg time: " << totalTime / verticesNum << "ms" << std::endl;
   std::cout << "Min time: " << minTime << "ms" << std::endl;
   std::cout << "Max time: " << maxTime << "ms" << std::endl;
-*/
-  std::cout << "END" << std::endl;
+
+ // std::cout << "END" << std::endl;
   return 0;
 }
 

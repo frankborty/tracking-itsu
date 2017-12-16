@@ -25,6 +25,7 @@
 
 #include "/opt/intel/opencl/SDK/include/CL/cl.h"
 #include "/opt/intel/opencl/SDK/include/CL/cl.hpp"
+#include "ITSReconstruction/CA/gpu/myThresholds.h"
 
 #if TRACKINGITSU_CUDA_MODE
 #include "ITSReconstruction/CA/gpu/Vector.h"
@@ -293,34 +294,234 @@ void sortCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layer
 
 } /// End of GPU namespace
 
-#define BUFFER_SIZE 20
-
 template<>
 void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
 {
-	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
+	//std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
 
 try{
-
-
-	//creo il kernel
 	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
 	cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
 	cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
 	PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
 	cl::Kernel oclKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
+	//oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
+	//std::cout<< "Device: "<<deviceName<<std::endl;
 
+	float deltaPhi;
+	int totalSum=0;
+	deltaPhi=myPhiThreshold;
+
+	//const char outputFileName[] = "TrackletsFound-ocl.txt";
+	//std::ofstream outFile;
+	//outFile.open((const char*)outputFileName);
+
+/*	const char outputFileName[] = "NEW_WorkGroupSize-ocl.txt";
+	std::ofstream outFilePre;
+	outFilePre.open((const char*)outputFileName, std::ios_base::app);
+	outFilePre << "DeltaPHI="<<deltaPhi<<"	WorkGroup="<<myWorkGroupSize<<"\n";
+	std::cout << "DeltaPHI="<<deltaPhi<<"	WorkGroup="<<myWorkGroupSize<<std::endl;
+*/
+
+
+	int warpSize=myWorkGroupSize;
+	std::string deviceName;
+
+
+	time_t t1,t2;
+	t1=clock();
+
+
+	for (int iLayer { 0 }; iLayer< Constants::ITS::TrackletsPerRoad; ++iLayer) {
+		int partialSum=0;
+		//deltaZ=Constants::Thresholds::TrackletMaxDeltaZThreshold()[iLayer];
+		//outFile << "Trackelts between Layer "<<iLayer<<" and "<< iLayer+1 <<	"\n";
+		const int clustersNum={static_cast<int>(primaryVertexContext.getClusters()[iLayer].size())};
+		dim3 threadsPerBlock{GPU::Utils::Host::getBlockSize(clustersNum,1,192)};
+		//dim3 blocksGrid { GPU::Utils::Host::getBlocksGrid(threadsPerBlock, clustersNum) };
+
+		int previousLayerClusterSize;
+		cl::Buffer bTrackletClusterTable;
+		if(iLayer>0){
+			previousLayerClusterSize=pvcStruct.mClusters[iLayer-1].size;
+			int *trackletClusterPreviousLayerTable=(int*)malloc(previousLayerClusterSize*sizeof(int));
+			memset(trackletClusterPreviousLayerTable,-1,previousLayerClusterSize*sizeof(int));
+			bTrackletClusterTable = cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+					previousLayerClusterSize*sizeof(int),
+					(void *) &trackletClusterPreviousLayerTable[0]);
+		}
+		else{
+			int fakeVector;
+			previousLayerClusterSize=0;
+			bTrackletClusterTable = cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+					sizeof(int),
+					(void *) &fakeVector);
+		}
+
+		cl::Buffer bLayerID = cl::Buffer(
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+			sizeof(int),
+			(void *) &iLayer);
+
+		//creo un buffer che tiene conto della posizione attuale nella quale inserire
+		//le nuove tracklet trovate
+		int iCurrentPosition=-1;
+		cl::Buffer bCurrentTrackletPosition = cl::Buffer(
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+			sizeof(int),
+			(void *) &iCurrentPosition);
+
+
+		int iCurrentLayerSize=primaryVertexContext.getClusters()[iLayer].size();
+		int iNextLayerSize=primaryVertexContext.getClusters()[iLayer+1].size();
+		cl::Buffer bCurrentLayerSize = cl::Buffer(
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+			sizeof(int),
+			(void *) &iCurrentLayerSize);
+		cl::Buffer bNextLayerSize = cl::Buffer(
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+			sizeof(int),
+			(void *) &iNextLayerSize);
+
+		oclKernel.setArg(0, pvcStruct.bPrimaryVertex);
+		oclKernel.setArg(1, pvcStruct.bClusters[iLayer]);
+		oclKernel.setArg(2, pvcStruct.bClusters[iLayer+1]);
+		oclKernel.setArg(3, pvcStruct.bIndexTable[iLayer]);
+		oclKernel.setArg(4, pvcStruct.bTracklets[iLayer]);
+		oclKernel.setArg(5, bLayerID);
+		oclKernel.setArg(6, bCurrentTrackletPosition);
+		oclKernel.setArg(7, bCurrentLayerSize);
+		oclKernel.setArg(8, bNextLayerSize);
+		oclKernel.setArg(9, bTrackletClusterTable);
+
+		warpSize=192;
+		while(true){
+			if(pvcStruct.mClusters[iLayer].size%warpSize!=0)
+				warpSize--;
+			else
+				break;
+		}
+
+		//outFilePre << "\nWorkGroup="<<myWorkGroupSize<<"\n";
+
+			// Do the work
+		oclCommandQueue.enqueueNDRangeKernel(
+			oclKernel,
+			cl::NullRange,
+
+			cl::NDRange(pvcStruct.mClusters[iLayer].size),
+			//cl::NullRange);
+			//cl::NullRange);
+			warpSize);
+/*
+		if(iLayer>0){
+			int* iTrackletFound = (int *) oclCommandQueue.enqueueMapBuffer(
+				bTrackletClusterTable,
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				sizeof(int));
+			for(int j=0;j<previousLayerClusterSize;j++){
+				printf("[%d][%d]=%d\n",iLayer,j,iTrackletFound[j]);
+				//totalSum+=iTrackletFound[j];
+			}
+		}
+*/
+
+		TrackletStruct* output = (TrackletStruct *) oclCommandQueue.enqueueMapBuffer(
+				pvcStruct.bTracklets[iLayer],
+				//bTrackletFound,
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				pvcStruct.mTracklets[iLayer].size * sizeof(TrackletStruct)
+		);
+
+		for(int i=0;i<pvcStruct.mTracklets[iLayer].size;i++){
+			if(output[i].firstClusterIndex!=0 || output[i].secondClusterIndex!=0){
+				//outFile << output[i].firstClusterIndex << "\t" << output[i].secondClusterIndex << "\t" << output[i].tanLambda << "\t" << output[i].phiCoordinate << "\n";
+				partialSum++;
+			}
+		}
+		totalSum+=partialSum;
+		//outFile<<"Tracklets found = "<<partialSum<<"\n";
+		//std::cout<<"Tracklets found = "<<partialSum<<std::endl;
+
+		}
+
+		//std::cout<<"TOTAL= "<<totalSum<<std::endl;
+		//outFile<<"TOTAL= "<<totalSum<<"\n";
+	}
+	catch(const cl::Error &err){
+			std::string errString=GPU::Utils::OCLErr_code(err.err());
+			std::cout<< errString << std::endl;
+			throw std::runtime_error { errString };
+	}
+	catch(...){
+		std::cout<<"Errore non opencl"<<std::endl;
+		throw std::runtime_error {"ERRORE NON OPENCL"};
+	}
+
+
+
+
+	//std::cout<<"EXECUTION TIME = "<<diff<<std::endl;
+
+}
+
+//first version of computeLayerTracklet(cpu algorithm)
+/*template<>
+void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
+{
+	//std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
+
+try{
+
+	int ksum=0;
+	//creo il kernel
+	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
+	cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
+	//int warpSize=GPU::Context::getInstance().getDeviceProperties().warpSize;
+	cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
+	PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
+	cl::Kernel oclKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
+	int warpSize=myWorkGroupSize;
 	std::string deviceName;
 	oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
-	std::cout<< "Device: "<<deviceName<<std::endl;
+	//std::cout<< "Device: "<<deviceName<<std::endl;
 
+	float deltaPhi;
+	float deltaZ;
+	int totalSum=0;
+	deltaPhi=myPhiThreshold;
+	deltaZ=myZThreshold;
 
-	std::cout<<std::endl;
-	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-		std::cout<< "OpenClKernel for compute trackelts between Layer "<<iLayer<<" and "<< iLayer+1<< std::endl;
-		std::string outputFileName = "trackletFound" + std::to_string(iLayer)+std::to_string(iLayer+1)+".txt";
-		std::ofstream outFilePre(outputFileName);
-		outFilePre << "\n\nTrackelts between Layer "<<iLayer<<" and "<< iLayer+1 << "\n";
+	//std::string outputFileName = "trackletFound_deltaPHI" +std::to_string(deltaPhi)+"_deltaZ"+std::to_string(deltaZ)+".txt";
+
+	const char outputFileNameLUT[] = "LookUpTableTracklet-ocl.txt";
+	std::ofstream outFilePreLUT;
+	outFilePreLUT.open((const char*)outputFileNameLUT);
+
+	//const char outputFileName[] = "TrackletFound-ocl.txt";LookUpTableTracklet
+	const char outputFileName[] = "NEW_WorkGroupSize-ocl.txt";
+	std::ofstream outFilePre;
+	outFilePre.open((const char*)outputFileName, std::ios_base::app);
+	outFilePre << "DeltaPHI="<<deltaPhi<<"	WorkGroup="<<myWorkGroupSize<<"\n";
+	std::cout << "DeltaPHI="<<deltaPhi<<"	WorkGroup="<<myWorkGroupSize<<std::endl;
+	time_t t1,t2;
+	t1=clock();
+	for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
+		deltaZ=Constants::Thresholds::TrackletMaxDeltaZThreshold()[iLayer];
+		//std::cout<< "OpenClKernel for compute trackelts between Layer "<<iLayer<<" and "<< iLayer+1<< std::endl;
+		//outFilePre << "Trackelts between Layer "<<iLayer<<" and "<< iLayer+1 << "	-	deltaZ:"<<deltaZ<<	"\n";
 
 
 
@@ -330,42 +531,17 @@ try{
 		int *iNumberTrackletFound;
 		iNumberTrackletFound=(int*)malloc(pvcStruct.mClusters[iLayer].size*sizeof(int));
 
-		//test max allocation size
-		/*int iLen=1500*1024*1024;
-		char *buf;
-		buf=(char*)malloc(iLen*sizeof(char));
-
-		cl::Buffer bTest = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-			(iLen)*sizeof(char),
-			(void *) &buf[0]);
-
-		char *buf2;
-		buf2=(char*)malloc(iLen*sizeof(char));
-
-		cl::Buffer bTest2 = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-			(iLen)*sizeof(char),
-			(void *) &buf2[0]);
-*/
-
 
 		//calcolo la grandezza massima del vettore di tracklet, lo creo e creo il buffer associto
 		int maxTrackletNum=pvcStruct.mClusters[iLayer].size*iNextLayerSize/10;	//limito lo il numero di tracklet che posso trovare con un singolo cluste
 																				//in questo modo posso creare i buffer senza problemi di memoria
 																				//(dimensione ~250MB compresi i 16B della struttua ClusterStruct)
+
+
 		TrackletStruct *trackletFound;
 		trackletFound=(TrackletStruct*)malloc(maxTrackletNum*sizeof(TrackletStruct));
 		for(int j=0;j<maxTrackletNum;j++)
 			trackletFound[j].firstClusterIndex=-1;
-
-		cl::Buffer bTrackletFound = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-			maxTrackletNum*sizeof(TrackletStruct),
-			(void *) &trackletFound[0]);
 
 
 		cl::Buffer bNumberTrackletFound = cl::Buffer(
@@ -392,12 +568,14 @@ try{
 			sizeof(int),
 			(void *) &iLayer);
 
-		if(iLayer==0){
-			std::ofstream outFile("my_filePre.txt");
-			for(int j=0;j<pvcStruct.mClusters[iLayer].size;j++){
-				iNumberTrackletFound[j]=0;
-			}
-		}
+		//creo un buffer che tiene conto della posizione attuale nella quale inserire
+		//le nuove tracklet trovate
+		int iCurrentPosition=-1;
+		cl::Buffer bCurrentPosition = cl::Buffer(
+			oclContext,
+			(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+			sizeof(int),
+			(void *) &iCurrentPosition);
 
 
 		oclKernel.setArg(0, pvcStruct.bPrimaryVertex);
@@ -409,18 +587,29 @@ try{
 			oclKernel.setArg(5,fakeBuff);
 		else
 			oclKernel.setArg(5, pvcStruct.bTrackletLookupTable[iLayer-1]);
-		oclKernel.setArg(6, bTrackletFound);
-		oclKernel.setArg(7, bNumberTrackletFound);
-		oclKernel.setArg(8, bNextLayerSize);
-		oclKernel.setArg(9, bLayerID);
+		oclKernel.setArg( 6, pvcStruct.bTracklets[iLayer]);//vettore nella quale vengono salvate le tracklet
+		oclKernel.setArg( 7, bNumberTrackletFound);
+		oclKernel.setArg( 8, bNextLayerSize);
+		oclKernel.setArg( 9, bLayerID);
+		oclKernel.setArg(10, bCurrentPosition);
+
+		while(true){
+			if(pvcStruct.mClusters[iLayer].size%warpSize!=0)
+				warpSize--;
+			else
+				break;
+		}
+
+		outFilePre << "\nWorkGroup="<<myWorkGroupSize<<"\n";
 
 			// Do the work
 		oclCommandQueue.enqueueNDRangeKernel(
 			oclKernel,
 			cl::NullRange,
 			cl::NDRange(pvcStruct.mClusters[iLayer].size),
+			//cl::NullRange);
 			cl::NullRange);
-
+			//warpSize);
 
 
 		int* iTrackletSize = (int *) oclCommandQueue.enqueueMapBuffer(
@@ -430,33 +619,52 @@ try{
 				0,
 				pvcStruct.mClusters[iLayer].size*sizeof(int));
 
+		for(int j=0;j<pvcStruct.mClusters[iLayer].size;j++){
+			if(iTrackletSize[j]>0){
+				ksum+=iTrackletSize[j];
+				iTrackletSize[j]=ksum;
+			}
+			outFilePreLUT<<"Layer:"<<iLayer<<"	index"<<j<<" -> "<<iTrackletSize[j]<<"\n";
+		}
+
 		TrackletStruct* output = (TrackletStruct *) oclCommandQueue.enqueueMapBuffer(
-				bTrackletFound,
+				pvcStruct.bTracklets[iLayer],
+				//bTrackletFound,
 				CL_TRUE, // block
 				CL_MAP_READ,
 				0,
-				maxTrackletNum * sizeof(TrackletStruct));
+				pvcStruct.mTracklets[iLayer].size * sizeof(TrackletStruct));
 
-		for(int j=0;j<maxTrackletNum;j++){
-			if(output[j].firstClusterIndex!=-1 )
-			outFilePre << output[j].firstClusterIndex <<"\t"<< output[j].secondClusterIndex <<"\t"<< output[j].phiCoordinate <<"\t"<<output[j].tanLambda<<"\n";
-		}
+		int* trackletFoundNumber = (int *) oclCommandQueue.enqueueMapBuffer(
+				bCurrentPosition,
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				sizeof(int));
 
-	/*
-		int sum=0;
-		std::ofstream outFilePre("my_file.txt");
+		int partialSum=*trackletFoundNumber;
+
+		outFilePre << "Tracklets found = "<<partialSum<<"\n";
+		totalSum+=partialSum;
+		//Scrivi tracklets trovate su my_tracklets.txt
+	//	int sum=0;
+	//	std::ofstream outFilePre("my_tracklets.txt");
 		//if(iLayer==0){
-			for(int j=0;j<pvcStruct.mClusters[iLayer].size;j++){
-				outFilePre << j << " = " << iTrackletSize[j] << "\n";
-				sum+=iTrackletSize[j];
-			}
+	//		for(int j=0;j<pvcStruct.mClusters[iLayer].size;j++){
+	//			outFilePre << j << " = " << iTrackletSize[j] << "\n";
+	//			sum+=iTrackletSize[j];
+	//		}
 		//}
-		std::cout<<"TOTAL="<<sum<<std::endl;
-*/
-
-
+//		std::cout<<"TOTAL="<<sum<<std::endl;
 
 		}
+		t2=clock();
+		const float diff=((float)t2-(float)t1)/(CLOCKS_PER_SEC/1000);
+		outFilePre << "Time = "<<diff<<"\n";
+		outFilePre << "Total = "<<totalSum<<"\n\n";
+		std::cout << "Total = "<<totalSum<<std::endl;
+		std::cout << "TotalKSum = "<<ksum<<std::endl;
+		outFilePreLUT << "Total = "<<ksum<<"\n";
 	}
 	catch(const cl::Error &err){
 			std::string errString=GPU::Utils::OCLErr_code(err.err());
@@ -467,68 +675,12 @@ try{
 		std::cout<<"Errore non opencl"<<std::endl;
 		throw std::runtime_error {"ERRORE NON OPENCL"};
 	}
-  //cudaDeviceSynchronize();
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
-//
-//    const GPU::DeviceProperties& deviceProperties = GPU::Context::getInstance().getDeviceProperties();
-//    const int clustersNum { static_cast<int>(primaryVertexContext.getClusters()[iLayer].size()) };
-//    dim3 threadsPerBlock { GPU::Utils::Host::getBlockSize(clustersNum, 1, 192) };
-//    dim3 blocksGrid { GPU::Utils::Host::getBlocksGrid(threadsPerBlock, clustersNum) };
-//
-//    if (iLayer == 0) {
-//
-//      GPU::layerTrackletsKernel<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(primaryVertexContext.getDeviceContext(),
-//          iLayer, primaryVertexContext.getDeviceTracklets()[iLayer].getWeakCopy());
-//
-//    } else {
-//
-//      GPU::layerTrackletsKernel<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(primaryVertexContext.getDeviceContext(),
-//          iLayer, primaryVertexContext.getTempTrackletArray()[iLayer - 1].getWeakCopy());
-//    }
-//
-//    cudaError_t error = cudaGetLastError();
-//
-//    if (error != cudaSuccess) {
-//
-//      std::ostringstream errorString { };
-//      errorString << "CUDA API returned error [" << cudaGetErrorString(error) << "] (code " << error << ")"
-//          << std::endl;
-//
-//      throw std::runtime_error { errorString.str() };
-//    }
-//  }
-//
-//  cudaDeviceSynchronize();
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-//
-//    trackletsNum[iLayer] = primaryVertexContext.getTempTrackletArray()[iLayer].getSizeFromDevice();
-//    primaryVertexContext.getDeviceTracklets()[iLayer + 1].resize(trackletsNum[iLayer]);
-//
-//    cub::DeviceScan::ExclusiveSum(static_cast<void *>(primaryVertexContext.getTempTableArray()[iLayer].get()), tempSize[iLayer],
-//        primaryVertexContext.getDeviceTrackletsPerClustersTable()[iLayer].get(),
-//        primaryVertexContext.getDeviceTrackletsLookupTable()[iLayer].get(),
-//        primaryVertexContext.getClusters()[iLayer + 1].size(), streamArray[iLayer + 1].get());
-//
-//    dim3 threadsPerBlock { GPU::Utils::Host::getBlockSize(trackletsNum[iLayer]) };
-//    dim3 blocksGrid { GPU::Utils::Host::getBlocksGrid(threadsPerBlock, trackletsNum[iLayer]) };
-//
-//    GPU::sortTrackletsKernel<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer + 1].get() >>>(primaryVertexContext.getDeviceContext(),
-//        iLayer + 1, primaryVertexContext.getTempTrackletArray()[iLayer].getWeakCopy());
-//
-//    cudaError_t error = cudaGetLastError();
-//
-//    if (error != cudaSuccess) {
-//
-//      std::ostringstream errorString { };
-//      errorString << "CUDA API returned error [" << cudaGetErrorString(error) << "] (code " << error << ")"
-//          << std::endl;
-//
-//      throw std::runtime_error { errorString.str() };
-//    }
-//  }
+
+
+	//std::cout<<"EXECUTION TIME = "<<diff<<std::endl;
+
 }
+*/
 
 template<>
 void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVertexContext)

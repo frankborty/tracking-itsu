@@ -65,8 +65,9 @@ GPU_DEVICE constexpr GPUArray<float, ITS::CellsPerRoad> CellMaxDistanceOfClosest
   return GPUArray<float, ITS::CellsPerRoad> { { 0.05f, 0.04f, 0.05f, 0.2f, 0.4f } };
 }
 constexpr float CellMaxDeltaPhiThreshold { 0.14f };
-constexpr float ZCoordinateCut { 0.5f };
 constexpr float PhiCoordinateCut { 0.3f };
+constexpr float ZCoordinateCut { 0.5f };
+
 constexpr GPUArray<float, ITS::CellsPerRoad - 1> NeighbourCellMaxNormalVectorsDelta {
     { 0.002f, 0.009f, 0.002f, 0.005f } };
 constexpr GPUArray<float, ITS::CellsPerRoad - 1> NeighbourCellMaxCurvaturesDelta { { 0.008f, 0.0025f, 0.003f, 0.0035f } };

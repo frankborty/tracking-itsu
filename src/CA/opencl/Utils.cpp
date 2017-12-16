@@ -24,6 +24,7 @@
 #include <CL/cl.hpp>
 #include "ITSReconstruction/CA/gpu/Context.h"
 #include <unistd.h>
+#include "myThresholds.h"
 
 
 namespace {
@@ -79,7 +80,7 @@ namespace GPU
 
 
 cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDevice, const char* fileName,const char* kernelName){
-	std::cout << "CreateKernelFromFile: "<<fileName <<"... ";
+	//std::cout << "CreateKernelFromFile: "<<fileName <<"... ";
 
 	std::ifstream kernelFile(fileName, std::ios::in);
 	if (!kernelFile.is_open())
@@ -101,7 +102,10 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 	try{
 		std::vector<cl::Device> oclDeviceList;
 		oclDeviceList.push_back(oclDevice);
-		program.build(oclDeviceList);
+		char buildOption[50];
+		sprintf(buildOption,"-DPHICUT=%f",myPhiThreshold);
+		//std::cout<<"kernel option "<<buildOption<<std::endl;
+		program.build(oclDeviceList,(const char*)buildOption);
 		return cl::Kernel(program,kernelName);
 	}
 	catch(const cl::Error &err){

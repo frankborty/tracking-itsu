@@ -218,7 +218,7 @@ void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 		sizeVector.clear();
 
 		//std::cout<<"[BaseStruct]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-		std::cout<<"C struct associated with primary vertex initialized"<< std::endl;
+		//std::cout<<"C struct associated with primary vertex initialized"<< std::endl;
 
 
 		mPrimaryVertexContext.mPrimaryVertexStruct=srPvc;
@@ -450,7 +450,6 @@ template<bool IsGPU>
 Tracker<IsGPU>::Tracker()
 {
   // Nothing to do
-	std::cout<<"Tracker()"<< std::endl;
 }
 
 template<bool IsGPU>
@@ -466,14 +465,21 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
 
 	//fill c struct associated to primary vertex
 	fillPrimaryVertexStruct(mPrimaryVertexContext);
+	clock_t t1,t2;
+	t1=clock();
+	computeTracklets();
+	t2=clock();
+	const float diff=((float)t2-(float)t1)/(CLOCKS_PER_SEC/1000);
+	std::cout<<"Time="<<diff<<std::endl;
+	/*
+	computeCells();
+	findCellsNeighbours();
+	findTracks();
+	computeMontecarloLabels();
 
-    computeTracklets();
-    /*computeCells();
-    findCellsNeighbours();
-    findTracks();
-    computeMontecarloLabels();
+	roads.emplace_back(mPrimaryVertexContext.getRoads());
+	*/
 
-    roads.emplace_back(mPrimaryVertexContext.getRoads());*/
   }
 
   return roads;

@@ -99,7 +99,7 @@ Context::Context()
 
 				std::string name;
 				deviceList[iDevice].getInfo(CL_DEVICE_NAME,&(mDeviceProperties[iTotalDevice].name));
-				std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
+				//std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
 
 				//compute number of compute units (cores)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS,&(mDeviceProperties[iTotalDevice].maxComputeUnits));
@@ -107,15 +107,15 @@ Context::Context()
 
 				//compute max device alloc size
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE,&(mDeviceProperties[iTotalDevice].globalMemorySize));
-				std::cout << "		Device Max Device Alloc Size: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
+				//std::cout << "		Device Max Device Alloc Size: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
 
 				//compute device global memory size
 				deviceList[iDevice].getInfo(CL_DEVICE_GLOBAL_MEM_SIZE,&(mDeviceProperties[iTotalDevice].globalMemorySize));
-				std::cout << "		Device Global Memory: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
+				//std::cout << "		Device Global Memory: " << mDeviceProperties[iTotalDevice].globalMemorySize << std::endl;
 
 				//compute the max number of work-item in a work group executing a kernel (refer to clEnqueueNDRangeKernel)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_GROUP_SIZE,&(mDeviceProperties[iTotalDevice].maxWorkGroupSize));
-				std::cout << "		Max work-group size: " << mDeviceProperties[iTotalDevice].maxWorkGroupSize << std::endl;
+				//std::cout << "		Max work-group size: " << mDeviceProperties[iTotalDevice].maxWorkGroupSize << std::endl;
 
 				//compute the max work-item dimension
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,&(mDeviceProperties[iTotalDevice].maxWorkItemDimension));
@@ -126,7 +126,7 @@ Context::Context()
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.x=sizeDim[0];
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.y=sizeDim[1];
 				mDeviceProperties[iTotalDevice].maxWorkItemSize.z=sizeDim[2];
-				std::cout << "		Max work-item Sizes: [" << mDeviceProperties[iTotalDevice].maxWorkItemSize.x << "," << mDeviceProperties[iTotalDevice].maxWorkItemSize.y << ","<< mDeviceProperties[iTotalDevice].maxWorkItemSize.z << "]"<< std::endl;
+				//std::cout << "		Max work-item Sizes: [" << mDeviceProperties[iTotalDevice].maxWorkItemSize.x << "," << mDeviceProperties[iTotalDevice].maxWorkItemSize.y << ","<< mDeviceProperties[iTotalDevice].maxWorkItemSize.z << "]"<< std::endl;
 
 				//get vendor name to obtain the warps size
 				deviceList[iDevice].getInfo(CL_DEVICE_VENDOR,&(mDeviceProperties[iTotalDevice].vendor));

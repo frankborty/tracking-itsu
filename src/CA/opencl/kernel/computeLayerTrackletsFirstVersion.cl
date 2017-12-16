@@ -11,6 +11,7 @@
 #define __constant const
 #define __global
 */
+
 __constant float TrackletMaxDeltaZThreshold[6]= { 0.1f, 0.1f, 0.3f, 0.3f, 0.3f, 0.3f }; //default
 //__constant float TrackletMaxDeltaZThreshold[6]= { 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f };
 __constant int ZBins=20;
@@ -163,48 +164,49 @@ __kernel void computeLayerTracklets(
 				__global int * currentLayerIndexTable, //3
 				__global TrackletStruct* currentLayerTracklets, //4
 				__global int * iCurrentLayer, //5
-				__global int * iCurrentTrackletsPosition, //6
-				__global int * iCurrentLayerClusterSize, //7
-				__global int * iNextLayerClusterSize, //8
+				__global int * iCurrentPosition, //6
+				__global int * iCurrentLayerClusterVectorSize, //7
+				__global int * iNextLayerClusterVectorSize, //8
 				__global int * iTrackletsPerClusterTablePreviousLayer //9
 		)
 					
 {
-	
+
 	const int currentClusterIndex=get_global_id(0);
 	int clusterTrackletsNum=0;
+	int currentLayerClusterVectorSize=*iCurrentLayerClusterVectorSize;
 	int iLayer=*iCurrentLayer;
-	int currentLayerClusterVectorSize=*iCurrentLayerClusterSize;
-	int nextLayerClusterVectorSize=*iNextLayerClusterSize;
-
 	if(currentClusterIndex<currentLayerClusterVectorSize){
 		__global ClusterStruct *currentCluster=&currentLayerClusters[currentClusterIndex];
-		
+
 		float tanLambda=(currentCluster->zCoordinate-primaryVertex->z)/currentCluster->rCoordinate;
 
 		float directionZIntersection= tanLambda*(LayersRCoordinate[iLayer+1]-currentCluster->rCoordinate)+currentCluster->zCoordinate;
 
 		const Int4Struct selectedBinsRect=getBinsRect(currentCluster,iLayer,directionZIntersection);
-		
-		if (selectedBinsRect.x != 0 || selectedBinsRect.y != 0 || selectedBinsRect.z != 0 || selectedBinsRect.w != 0) {
-	      	const int nextLayerClustersNum=nextLayerClusterVectorSize;
-	      	int phiBinsNum=selectedBinsRect.w - selectedBinsRect.y + 1;
-		
-			if(phiBinsNum<0){
-		    	  phiBinsNum+=PhiBins;
-		    }
 
-		      for(int iPhiBin=selectedBinsRect.y,iPhiCount=0;iPhiCount < phiBinsNum;iPhiBin = ++iPhiBin == PhiBins ? 0 : iPhiBin, iPhiCount++){
+		if (selectedBinsRect.x != 0 || selectedBinsRect.y != 0 || selectedBinsRect.z != 0 || selectedBinsRect.w != 0) {
+		      const int nextLayerClustersNum=(*iNextLayerClusterVectorSize);
+		      int phiBinsNum=selectedBinsRect.w - selectedBinsRect.y + 1;
+
+		      if(phiBinsNum<0){
+		    	  phiBinsNum+=PhiBins;
+		      }
+
+		      for(int iPhiBin=selectedBinsRect.y,iPhiCount=0;iPhiCount < phiBinsNum;
+		              iPhiBin = ++iPhiBin == PhiBins ? 0 : iPhiBin, iPhiCount++){
 		    	  const int firstBinIndex=getBinIndex(selectedBinsRect.x,iPhiBin);
-		    	  const int firstRowClusterIndex = currentLayerIndexTable[firstBinIndex];
-		    	  const int maxRowClusterIndex = currentLayerIndexTable[firstBinIndex+ selectedBinsRect.z - selectedBinsRect.x + 1 ];
-				  for (int iNextLayerCluster=firstRowClusterIndex;iNextLayerCluster <= maxRowClusterIndex && iNextLayerCluster < nextLayerClustersNum; ++iNextLayerCluster) {
+		    	  const int firstRowClusterIndex = (*currentLayerIndexTable)[firstBinIndex];
+		    	  const int maxRowClusterIndex = (*currentLayerIndexTable)[firstBinIndex+ selectedBinsRect.z - selectedBinsRect.x + 1 ];
+
+		    	  for (int iNextLayerCluster=firstRowClusterIndex;iNextLayerCluster <= maxRowClusterIndex && iNextLayerCluster < nextLayerClustersNum; ++iNextLayerCluster) {
 		    		  __global ClusterStruct *nextCluster=&nextLayerClusters[iNextLayerCluster];
+
 		    		  const float deltaZ=myAbs(tanLambda * (nextCluster->rCoordinate - currentCluster->rCoordinate) + currentCluster->zCoordinate - nextCluster->zCoordinate);
 		    		  const float deltaPhi=myAbs(currentCluster->phiCoordinate - nextCluster->phiCoordinate);
 
 		    		  if (deltaZ < TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || myAbs(deltaPhi-TwoPi)<PhiCoordinateCut)){
-		    			  int iTrackletPosition=atom_inc(&iCurrentTrackletsPosition[0])+1;
+		    			  int iTrackletPosition=atom_inc(&iCurrentPosition[0])+1;
 		    			  __global TrackletStruct* tracklet=&currentLayerTracklets[iTrackletPosition];
 		    			  tracklet->firstClusterIndex=currentClusterIndex;
 		    			  tracklet->secondClusterIndex=iNextLayerCluster;
@@ -212,7 +214,6 @@ __kernel void computeLayerTracklets(
 		    			  tracklet->phiCoordinate= atan2(currentCluster->yCoordinate - nextCluster->yCoordinate, currentCluster->xCoordinate - nextCluster->xCoordinate);
 
 		    			  ++clusterTrackletsNum;
-		    			  
 		    		  }
 		    	  }
 		      }
@@ -222,5 +223,3 @@ __kernel void computeLayerTracklets(
 		}
 	}	
 }
-
-

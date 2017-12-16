@@ -26,7 +26,7 @@ namespace CA
 PrimaryVertexContext::PrimaryVertexContext()
 {
   // Nothing to do
-	std::cout<<"PrimaryVertexContext()"<<std::endl;
+
 }
 
 void PrimaryVertexContext::initialize(const Event& event, const int primaryVertexIndex) {

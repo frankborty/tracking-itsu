@@ -19,6 +19,11 @@
 #include "ITSReconstruction/CA/Constants.h"
 #include "CL/cl.hpp"
 
+	typedef struct __attribute__ ((packed)) int3Struct{
+		cl_int x;
+		cl_int y;
+		cl_int z;
+	}Int3Struct;
 
 	typedef struct __attribute__ ((packed)) float3Struct{
 		cl_float x;
@@ -104,14 +109,10 @@
 		VectStruct mTrackletLookupTable [o2::ITS::CA::Constants::ITS::CellsPerRoad];
 		cl::Buffer bTrackletLookupTable [o2::ITS::CA::Constants::ITS::CellsPerRoad];
 		cl::Buffer bTrackletLookupTableSize;
-		/*int IndexTableX;
-		int IndexTavleY;
-		int **mIndexTable;
-		int CellsNeighX;
-		int CellsNeighY;
-		int *mCellsNeigh;
-		int RoadsSize;
-		VectStruct mRoads;*/
+
+		cl::Kernel firstPhaseKernel;
+
+
 	}PrimaryVertexContestStruct;
 
 
