@@ -20,7 +20,7 @@
 
 #include <cuda_runtime.h>
 
-#include "cub/cub.cuh"
+#include "external/cub/cub.cuh"
 
 #include "ITSReconstruction/CA/Constants.h"
 #include "ITSReconstruction/CA/IndexTableUtils.h"

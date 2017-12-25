@@ -30,7 +30,7 @@ std::string getDirectory(const std::string& fname)
 
 int main(int argc, char** argv)
 {
-/*
+
 #if TRACKINGITSU_CUDA_MODE
 	std::cout << ">> CUDA MODE"<< std::endl;
 #elif TRACKINGITSU_OCL_MODE
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 #else
 	std::cout << ">> CPU MODE"<< std::endl;
 #endif
-*/
+
 
   if (argv[1] == NULL) {
     std::cerr << "Please, provide a data file." << std::endl;
@@ -50,21 +50,8 @@ int main(int argc, char** argv)
   }
   else
 	  myWorkGroupSize=16;
-
-  /*
-  if (argc>= 3) {
-      myPhiThreshold=atof(argv[2]);
-  }
-  else*/
-	  myPhiThreshold=Constants::Thresholds::PhiCoordinateCut;
-/*
-  if (argc>=4) {
-	  std::cout<<"myZ="<<myZThreshold<<std::endl;
-  }
-  *
-  else
-	*/  myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
-  //std::cout<<"PhiCut="<<myPhiThreshold<<"	-	WorkGroup="<<myWorkGroupSize<<std::endl;
+myPhiThreshold=Constants::Thresholds::PhiCoordinateCut;
+myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 #endif
   std::string eventsFileName(argv[1]);
   std::string benchmarkFolderName = getDirectory(eventsFileName);
@@ -76,7 +63,7 @@ int main(int argc, char** argv)
   }
 
   std::vector<std::unordered_map<int, Label>> labelsMap;
-  bool createBenchmarkData = false;
+  //bool createBenchmarkData = true;
   std::ofstream correctRoadsOutputStream;
   std::ofstream duplicateRoadsOutputStream;
   std::ofstream fakeRoadsOutputStream;
@@ -85,7 +72,7 @@ int main(int argc, char** argv)
     verticesNum += events[iEvent].getPrimaryVerticesNum();
   }
 
-/*
+
   if (argv[2] != NULL) {
 
     std::string labelsFileName(argv[2]);
@@ -97,10 +84,10 @@ int main(int argc, char** argv)
     duplicateRoadsOutputStream.open(benchmarkFolderName + "DuplicateRoads.txt");
     fakeRoadsOutputStream.open(benchmarkFolderName + "FakeRoads.txt");
   }
-  */
 
-  clock_t t1, t2;
-  float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
+
+  //clock_t t1, t2;
+  //float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
 #if defined MEMORY_BENCHMARK
   std::ofstream memoryBenchmarkOutputStream;
   memoryBenchmarkOutputStream.open(benchmarkFolderName + "MemoryOccupancy.txt");
@@ -112,7 +99,7 @@ int main(int argc, char** argv)
   // Prevent cold cache benchmark noise
   Tracker<TRACKINGITSU_GPU_MODE> tracker{};
   tracker.clustersToTracks(events[0]);
-
+/*
 #if defined GPU_PROFILING_MODE
   Utils::Host::gpuStartProfiler();
 #endif
@@ -178,6 +165,7 @@ int main(int argc, char** argv)
 
       std::cout << e.what() << std::endl;
     }
+
   }
 
 #if defined GPU_PROFILING_MODE
@@ -187,8 +175,7 @@ int main(int argc, char** argv)
   std::cout << std::endl;
   std::cout << "Avg time: " << totalTime / verticesNum << "ms" << std::endl;
   std::cout << "Min time: " << minTime << "ms" << std::endl;
-  std::cout << "Max time: " << maxTime << "ms" << std::endl;
-
+  std::cout << "Max time: " << maxTime << "ms" << std::endl;*/
  // std::cout << "END" << std::endl;
   return 0;
 }

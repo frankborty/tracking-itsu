@@ -99,7 +99,7 @@ Context::Context()
 
 				std::string name;
 				deviceList[iDevice].getInfo(CL_DEVICE_NAME,&(mDeviceProperties[iTotalDevice].name));
-				//std::cout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
+				//std::acout << "	>> Device: " << mDeviceProperties[iTotalDevice].name << std::endl;
 
 				//compute number of compute units (cores)
 				deviceList[iDevice].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS,&(mDeviceProperties[iTotalDevice].maxComputeUnits));
@@ -143,8 +143,6 @@ Context::Context()
 					//std::cout<<">> NOT NVIDIA/AMD" << std::endl;
 					mDeviceProperties[iTotalDevice].warpSize=16;
 				}
-
-				//std::cout << "		Warps size: " << mDeviceProperties[iTotalDevice].warpSize << std::endl;
 
 
 

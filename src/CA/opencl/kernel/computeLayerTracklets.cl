@@ -170,13 +170,13 @@ __kernel void computeLayerTracklets(
 		)
 					
 {
-	
+
 	const int currentClusterIndex=get_global_id(0);
 	int clusterTrackletsNum=0;
 	int iLayer=*iCurrentLayer;
 	int currentLayerClusterVectorSize=*iCurrentLayerClusterSize;
 	int nextLayerClusterVectorSize=*iNextLayerClusterSize;
-
+	//printf("%d\n",currentClusterIndex);
 	if(currentClusterIndex<currentLayerClusterVectorSize){
 		__global ClusterStruct *currentCluster=&currentLayerClusters[currentClusterIndex];
 		
@@ -210,17 +210,22 @@ __kernel void computeLayerTracklets(
 		    			  tracklet->secondClusterIndex=iNextLayerCluster;
 		    			  tracklet->tanLambda=(currentCluster->zCoordinate - nextCluster->zCoordinate) / (currentCluster->rCoordinate - nextCluster->rCoordinate);
 		    			  tracklet->phiCoordinate= atan2(currentCluster->yCoordinate - nextCluster->yCoordinate, currentCluster->xCoordinate - nextCluster->xCoordinate);
-
+						  //if(iLayer==0)
+							//  printf("%d %d\n",tracklet->firstClusterIndex,tracklet->secondClusterIndex);
 		    			  ++clusterTrackletsNum;
-		    			  
 		    		  }
 		    	  }
 		      }
-		      if (iLayer > 0) {
-		    	  iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = clusterTrackletsNum;
-		      }
 		}
 	}	
+	 if (iLayer>0){
+	 	if(clusterTrackletsNum>0) {
+    		iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = clusterTrackletsNum;
+      	}
+      	else{
+        	iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = 0;
+      	}	
+      }
 }
 
 

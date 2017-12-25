@@ -81,7 +81,7 @@ namespace GPU
 
 cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDevice, const char* fileName,const char* kernelName){
 	//std::cout << "CreateKernelFromFile: "<<fileName <<"... ";
-
+	cl::Kernel kernel;
 	std::ifstream kernelFile(fileName, std::ios::in);
 	if (!kernelFile.is_open())
 	{
@@ -102,11 +102,11 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 	try{
 		std::vector<cl::Device> oclDeviceList;
 		oclDeviceList.push_back(oclDevice);
-		char buildOption[50];
-		sprintf(buildOption,"-DPHICUT=%f",myPhiThreshold);
+		char buildOption[100];
+		sprintf(buildOption,"-cl-unsafe-math-optimizations -cl-fast-relaxed-math");
 		//std::cout<<"kernel option "<<buildOption<<std::endl;
-		program.build(oclDeviceList,(const char*)buildOption);
-		return cl::Kernel(program,kernelName);
+		program.build(oclDeviceList);
+		kernel=cl::Kernel(program,kernelName);
 	}
 	catch(const cl::Error &err){
 
@@ -120,6 +120,8 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 
 		throw std::runtime_error { errString };
 	}
+	std::cout<<"compilation completed"<<std::endl;
+	return kernel;
 }
 
 

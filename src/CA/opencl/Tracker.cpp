@@ -17,15 +17,19 @@
 #include <ITSReconstruction/CA/Constants.h>
 #include <ITSReconstruction/CA/Tracker.h>
 #include <ITSReconstruction/CA/Tracklet.h>
+#include "ITSReconstruction/CA/Definitions.h"
 #include <StructGPUPrimaryVertex.h>
 #include <Utils.h>
 #include <Vector.h>
 #include <stdexcept>
 #include <string>
 
-#include "/opt/intel/opencl/SDK/include/CL/cl.h"
-#include "/opt/intel/opencl/SDK/include/CL/cl.hpp"
+#if TRACKINGITSU_OCL_MODE
+#include <CL/cl.hpp>
+#include <clogs/clogs.h>
+#include <clogs/scan.h>
 #include "ITSReconstruction/CA/gpu/myThresholds.h"
+#endif
 
 #if TRACKINGITSU_CUDA_MODE
 #include "ITSReconstruction/CA/gpu/Vector.h"
@@ -47,201 +51,12 @@ namespace GPU
 void computeLayerTracklets(PrimaryVertexContext &primaryVertexContext, const int layerIndex,
     Vector<Tracklet>& trackletsVector)
 {
-	std::cout << "OCL_Tracker:computeLayerTracklets2"<< std::endl;
-  //const int currentClusterIndex = static_cast<int>(blockDim.x * blockIdx.x + threadIdx.x);
-//  int clusterTrackletsNum = 0;
-//
-//  if (currentClusterIndex < primaryVertexContext.getClusters()[layerIndex].size()) {
-//
-//    Vector<Cluster> nextLayerClusters { primaryVertexContext.getClusters()[layerIndex + 1].getWeakCopy() };
-//    const Cluster currentCluster { primaryVertexContext.getClusters()[layerIndex][currentClusterIndex] };
-//
-//    /*if (mUsedClustersTable[currentCluster.clusterId] != Constants::ITS::UnusedIndex) {
-//
-//     continue;
-//     }*/
-//
-//    const float tanLambda { (currentCluster.zCoordinate - primaryVertexContext.getPrimaryVertex().z)
-//        / currentCluster.rCoordinate };
-//    const float directionZIntersection { tanLambda
-//        * ((Constants::ITS::LayersRCoordinate())[layerIndex + 1] - currentCluster.rCoordinate)
-//        + currentCluster.zCoordinate };
-//
-//    const int4 selectedBinsRect { TrackingUtils::getBinsRect(currentCluster, layerIndex, directionZIntersection) };
-//
-//    if (selectedBinsRect.x != 0 || selectedBinsRect.y != 0 || selectedBinsRect.z != 0 || selectedBinsRect.w != 0) {
-//
-//      const int nextLayerClustersNum { static_cast<int>(nextLayerClusters.size()) };
-//      int phiBinsNum { selectedBinsRect.w - selectedBinsRect.y + 1 };
-//
-//      if (phiBinsNum < 0) {
-//
-//        phiBinsNum += Constants::IndexTable::PhiBins;
-//      }
-//
-//      for (int iPhiBin { selectedBinsRect.y }, iPhiCount { 0 }; iPhiCount < phiBinsNum;
-//          iPhiBin = ++iPhiBin == Constants::IndexTable::PhiBins ? 0 : iPhiBin, iPhiCount++) {
-//
-//        const int firstBinIndex { IndexTableUtils::getBinIndex(selectedBinsRect.x, iPhiBin) };
-//        const int firstRowClusterIndex = primaryVertexContext.getIndexTables()[layerIndex][firstBinIndex];
-//        const int maxRowClusterIndex = primaryVertexContext.getIndexTables()[layerIndex][ { firstBinIndex
-//            + selectedBinsRect.z - selectedBinsRect.x + 1 }];
-//
-//        for (int iNextLayerCluster { firstRowClusterIndex };
-//            iNextLayerCluster <= maxRowClusterIndex && iNextLayerCluster < nextLayerClustersNum; ++iNextLayerCluster) {
-//
-//          const Cluster& nextCluster { nextLayerClusters[iNextLayerCluster] };
-//
-//          const float deltaZ { MATH_ABS(
-//              tanLambda * (nextCluster.rCoordinate - currentCluster.rCoordinate) + currentCluster.zCoordinate
-//                  - nextCluster.zCoordinate) };
-//          const float deltaPhi { MATH_ABS(currentCluster.phiCoordinate - nextCluster.phiCoordinate) };
-//
-//          if (deltaZ < Constants::Thresholds::TrackletMaxDeltaZThreshold()[layerIndex]
-//              && (deltaPhi < Constants::Thresholds::PhiCoordinateCut
-//                  || MATH_ABS(deltaPhi - Constants::Math::TwoPi) < Constants::Thresholds::PhiCoordinateCut)) {
-//
-//            int mask { static_cast<int>(__ballot(1)) };
-//            int leader { __ffs(mask) - 1 };
-//            int laneIndex { Utils::Device::getLaneIndex() };
-//            int currentIndex { };
-//
-//            if (laneIndex == leader) {
-//
-//              currentIndex = trackletsVector.extend(__popc(mask));
-//            }
-//
-//            currentIndex = Utils::Device::shareToWarp(currentIndex, leader)
-//                + __popc(mask & ((1 << laneIndex) - 1));
-//
-//            trackletsVector.emplace(currentIndex, currentClusterIndex, iNextLayerCluster, currentCluster, nextCluster);
-//            ++clusterTrackletsNum;
-//          }
-//        }
-//      }
-//
-//      if (layerIndex > 0) {
-//
-//        primaryVertexContext.getTrackletsPerClusterTable()[layerIndex - 1][currentClusterIndex] = clusterTrackletsNum;
-//      }
-//    }
-//  }
+
 }
 
 void computeLayerCells(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
     Vector<Cell>& cellsVector)
 {
-//  const int currentTrackletIndex = static_cast<int>(blockDim.x * blockIdx.x + threadIdx.x);
-//  const float3 &primaryVertex = primaryVertexContext.getPrimaryVertex();
-//  int trackletCellsNum = 0;
-//
-//  if (currentTrackletIndex < primaryVertexContext.getTracklets()[layerIndex].size()) {
-//
-//    const Tracklet& currentTracklet { primaryVertexContext.getTracklets()[layerIndex][currentTrackletIndex] };
-//    const int nextLayerClusterIndex { currentTracklet.secondClusterIndex };
-//    const int nextLayerFirstTrackletIndex {
-//        primaryVertexContext.getTrackletsLookupTable()[layerIndex][nextLayerClusterIndex] };
-//    const int nextLayerTrackletsNum { static_cast<int>(primaryVertexContext.getTracklets()[layerIndex + 1].size()) };
-//
-//    if (primaryVertexContext.getTracklets()[layerIndex + 1][nextLayerFirstTrackletIndex].firstClusterIndex
-//        == nextLayerClusterIndex) {
-//
-//      const Cluster& firstCellCluster {
-//          primaryVertexContext.getClusters()[layerIndex][currentTracklet.firstClusterIndex] };
-//      const Cluster& secondCellCluster {
-//          primaryVertexContext.getClusters()[layerIndex + 1][currentTracklet.secondClusterIndex] };
-//      const float firstCellClusterQuadraticRCoordinate { firstCellCluster.rCoordinate * firstCellCluster.rCoordinate };
-//      const float secondCellClusterQuadraticRCoordinate { secondCellCluster.rCoordinate * secondCellCluster.rCoordinate };
-//      const float3 firstDeltaVector { secondCellCluster.xCoordinate - firstCellCluster.xCoordinate,
-//          secondCellCluster.yCoordinate - firstCellCluster.yCoordinate, secondCellClusterQuadraticRCoordinate
-//              - firstCellClusterQuadraticRCoordinate };
-//
-//      for (int iNextLayerTracklet { nextLayerFirstTrackletIndex };
-//          iNextLayerTracklet < nextLayerTrackletsNum
-//              && primaryVertexContext.getTracklets()[layerIndex + 1][iNextLayerTracklet].firstClusterIndex
-//                  == nextLayerClusterIndex; ++iNextLayerTracklet) {
-//
-//        const Tracklet& nextTracklet { primaryVertexContext.getTracklets()[layerIndex + 1][iNextLayerTracklet] };
-//        const float deltaTanLambda { MATH_ABS(currentTracklet.tanLambda - nextTracklet.tanLambda) };
-//        const float deltaPhi { MATH_ABS(currentTracklet.phiCoordinate - nextTracklet.phiCoordinate) };
-//
-//        if (deltaTanLambda < Constants::Thresholds::CellMaxDeltaTanLambdaThreshold
-//            && (deltaPhi < Constants::Thresholds::CellMaxDeltaPhiThreshold
-//                || MATH_ABS(deltaPhi - Constants::Math::TwoPi) < Constants::Thresholds::CellMaxDeltaPhiThreshold)) {
-//
-//          const float averageTanLambda { 0.5f * (currentTracklet.tanLambda + nextTracklet.tanLambda) };
-//          const float directionZIntersection { -averageTanLambda * firstCellCluster.rCoordinate
-//              + firstCellCluster.zCoordinate };
-//          const float deltaZ { MATH_ABS(directionZIntersection - primaryVertex.z) };
-//
-//          if (deltaZ < Constants::Thresholds::CellMaxDeltaZThreshold()[layerIndex]) {
-//
-//            const Cluster& thirdCellCluster {
-//                primaryVertexContext.getClusters()[layerIndex + 2][nextTracklet.secondClusterIndex] };
-//
-//            const float thirdCellClusterQuadraticRCoordinate { thirdCellCluster.rCoordinate
-//                * thirdCellCluster.rCoordinate };
-//
-//            const float3 secondDeltaVector { thirdCellCluster.xCoordinate - firstCellCluster.xCoordinate,
-//                thirdCellCluster.yCoordinate - firstCellCluster.yCoordinate, thirdCellClusterQuadraticRCoordinate
-//                    - firstCellClusterQuadraticRCoordinate };
-//
-//            float3 cellPlaneNormalVector { MathUtils::crossProduct(firstDeltaVector, secondDeltaVector) };
-//
-//            const float vectorNorm { std::sqrt(
-//                cellPlaneNormalVector.x * cellPlaneNormalVector.x + cellPlaneNormalVector.y * cellPlaneNormalVector.y
-//                    + cellPlaneNormalVector.z * cellPlaneNormalVector.z) };
-//
-//            if (!(vectorNorm < Constants::Math::FloatMinThreshold
-//                || MATH_ABS(cellPlaneNormalVector.z) < Constants::Math::FloatMinThreshold)) {
-//
-//              const float inverseVectorNorm { 1.0f / vectorNorm };
-//              const float3 normalizedPlaneVector { cellPlaneNormalVector.x * inverseVectorNorm, cellPlaneNormalVector.y
-//                  * inverseVectorNorm, cellPlaneNormalVector.z * inverseVectorNorm };
-//              const float planeDistance { -normalizedPlaneVector.x * (secondCellCluster.xCoordinate - primaryVertex.x)
-//                  - (normalizedPlaneVector.y * secondCellCluster.yCoordinate - primaryVertex.y)
-//                  - normalizedPlaneVector.z * secondCellClusterQuadraticRCoordinate };
-//              const float normalizedPlaneVectorQuadraticZCoordinate { normalizedPlaneVector.z * normalizedPlaneVector.z };
-//              const float cellTrajectoryRadius { MATH_SQRT(
-//                  (1.0f - normalizedPlaneVectorQuadraticZCoordinate - 4.0f * planeDistance * normalizedPlaneVector.z)
-//                      / (4.0f * normalizedPlaneVectorQuadraticZCoordinate)) };
-//              const float2 circleCenter { -0.5f * normalizedPlaneVector.x / normalizedPlaneVector.z, -0.5f
-//                  * normalizedPlaneVector.y / normalizedPlaneVector.z };
-//              const float distanceOfClosestApproach { MATH_ABS(
-//                  cellTrajectoryRadius - MATH_SQRT(circleCenter.x * circleCenter.x + circleCenter.y * circleCenter.y)) };
-//
-//              if (distanceOfClosestApproach
-//                  <= Constants::Thresholds::CellMaxDistanceOfClosestApproachThreshold()[layerIndex]) {
-//
-//                int mask { static_cast<int>(__ballot(1)) };
-//                int leader { __ffs(mask) - 1 };
-//                int laneIndex { Utils::Device::getLaneIndex() };
-//                int currentIndex { };
-//
-//                if (laneIndex == leader) {
-//
-//                  currentIndex = cellsVector.extend(__popc(mask));
-//                }
-//
-//                currentIndex = Utils::Device::shareToWarp(currentIndex, leader)
-//                    + __popc(mask & ((1 << laneIndex) - 1));
-//
-//                cellsVector.emplace(currentIndex, currentTracklet.firstClusterIndex,
-//                    nextTracklet.firstClusterIndex, nextTracklet.secondClusterIndex, currentTrackletIndex,
-//                    iNextLayerTracklet, normalizedPlaneVector, 1.0f / cellTrajectoryRadius);
-//                ++trackletCellsNum;
-//              }
-//            }
-//          }
-//        }
-//      }
-//
-//      if (layerIndex > 0) {
-//
-//        primaryVertexContext.getCellsPerTrackletTable()[layerIndex - 1][currentTrackletIndex] = trackletCellsNum;
-//      }
-//    }
-//  }
 }
 
 void layerTrackletsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
@@ -253,18 +68,7 @@ void layerTrackletsKernel(PrimaryVertexContext& primaryVertexContext, const int 
 void sortTrackletsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
     Vector<Tracklet> tempTrackletArray)
 {
-//  const int currentTrackletIndex { static_cast<int>(blockDim.x * blockIdx.x + threadIdx.x) };
-//
-//  if (currentTrackletIndex < tempTrackletArray.size()) {
-//
-//    const int firstClusterIndex = tempTrackletArray[currentTrackletIndex].firstClusterIndex;
-//    const int offset = atomicAdd(&primaryVertexContext.getTrackletsPerClusterTable()[layerIndex - 1][firstClusterIndex],
-//        -1) - 1;
-//    const int startIndex = primaryVertexContext.getTrackletsLookupTable()[layerIndex - 1][firstClusterIndex];
-//
-//    memcpy(&primaryVertexContext.getTracklets()[layerIndex][startIndex + offset],
-//        &tempTrackletArray[currentTrackletIndex], sizeof(Tracklet));
-//  }
+
 }
 
 void layerCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
@@ -278,18 +82,7 @@ void layerCellsKernel(PrimaryVertexContext& primaryVertexContext, const int laye
 void sortCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layerIndex,
     Vector<Cell> tempCellsArray)
 {
-//  const int currentCellIndex = static_cast<int>(blockDim.x * blockIdx.x + threadIdx.x);
-//
-//  if (currentCellIndex < tempCellsArray.size()) {
-//
-//    const int firstTrackletIndex = tempCellsArray[currentCellIndex].getFirstTrackletIndex();
-//    const int offset = atomicAdd(&primaryVertexContext.getCellsPerTrackletTable()[layerIndex - 1][firstTrackletIndex],
-//        -1) - 1;
-//    const int startIndex = primaryVertexContext.getCellsLookupTable()[layerIndex - 1][firstTrackletIndex];
-//
-//    memcpy(&primaryVertexContext.getCells()[layerIndex][startIndex + offset], &tempCellsArray[currentCellIndex],
-//        sizeof(Cell));
-//  }
+
 }
 
 } /// End of GPU namespace
@@ -298,166 +91,148 @@ template<>
 void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
 {
 	//std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
-
-try{
-	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
-	cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
-	cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
-	PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
-	cl::Kernel oclKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
-	//oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
-	//std::cout<< "Device: "<<deviceName<<std::endl;
-
-	float deltaPhi;
-	int totalSum=0;
-	deltaPhi=myPhiThreshold;
-
-	//const char outputFileName[] = "TrackletsFound-ocl.txt";
-	//std::ofstream outFile;
-	//outFile.open((const char*)outputFileName);
-
-/*	const char outputFileName[] = "NEW_WorkGroupSize-ocl.txt";
-	std::ofstream outFilePre;
-	outFilePre.open((const char*)outputFileName, std::ios_base::app);
-	outFilePre << "DeltaPHI="<<deltaPhi<<"	WorkGroup="<<myWorkGroupSize<<"\n";
-	std::cout << "DeltaPHI="<<deltaPhi<<"	WorkGroup="<<myWorkGroupSize<<std::endl;
-*/
-
-
-	int warpSize=myWorkGroupSize;
-	std::string deviceName;
-
-
+	cl::CommandQueue oclCommandqueues[6];
 	time_t t1,t2;
 	t1=clock();
+	try{
+
+		cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
+		cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
+		//cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
+		PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
+		cl::Kernel oclKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
+		t1=clock();
+		for(int i=0;i<6;i++)
+				oclCommandqueues[i]=cl::CommandQueue(oclContext, oclDevice, 0);
 
 
-	for (int iLayer { 0 }; iLayer< Constants::ITS::TrackletsPerRoad; ++iLayer) {
-		int partialSum=0;
-		//deltaZ=Constants::Thresholds::TrackletMaxDeltaZThreshold()[iLayer];
-		//outFile << "Trackelts between Layer "<<iLayer<<" and "<< iLayer+1 <<	"\n";
-		const int clustersNum={static_cast<int>(primaryVertexContext.getClusters()[iLayer].size())};
-		dim3 threadsPerBlock{GPU::Utils::Host::getBlockSize(clustersNum,1,192)};
-		//dim3 blocksGrid { GPU::Utils::Host::getBlocksGrid(threadsPerBlock, clustersNum) };
+		std::string deviceName;
+		oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
+		std::cout<< "Device: "<<deviceName<<std::endl;
 
-		int previousLayerClusterSize;
-		cl::Buffer bTrackletClusterTable;
-		if(iLayer>0){
-			previousLayerClusterSize=pvcStruct.mClusters[iLayer-1].size;
-			int *trackletClusterPreviousLayerTable=(int*)malloc(previousLayerClusterSize*sizeof(int));
-			memset(trackletClusterPreviousLayerTable,-1,previousLayerClusterSize*sizeof(int));
-			bTrackletClusterTable = cl::Buffer(
-					oclContext,
-					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-					previousLayerClusterSize*sizeof(int),
-					(void *) &trackletClusterPreviousLayerTable[0]);
-		}
-		else{
-			int fakeVector;
-			previousLayerClusterSize=0;
-			bTrackletClusterTable = cl::Buffer(
-					oclContext,
-					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-					sizeof(int),
-					(void *) &fakeVector);
-		}
+	/*
+		const char outputFileName[] = "LookupTable-ocl.txt";
+		std::ofstream outFile;
+		outFile.open((const char*)outputFileName);
+	*/
 
-		cl::Buffer bLayerID = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			sizeof(int),
-			(void *) &iLayer);
+		const char outputFileName[] = "oclTrackletsFound.txt";
+		std::ofstream outFileTracklet;
+		outFileTracklet.open((const char*)outputFileName);
 
-		//creo un buffer che tiene conto della posizione attuale nella quale inserire
-		//le nuove tracklet trovate
-		int iCurrentPosition=-1;
-		cl::Buffer bCurrentTrackletPosition = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-			sizeof(int),
-			(void *) &iCurrentPosition);
+		int workgroupSize=myWorkGroupSize;
 
 
-		int iCurrentLayerSize=primaryVertexContext.getClusters()[iLayer].size();
-		int iNextLayerSize=primaryVertexContext.getClusters()[iLayer+1].size();
-		cl::Buffer bCurrentLayerSize = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			sizeof(int),
-			(void *) &iCurrentLayerSize);
-		cl::Buffer bNextLayerSize = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			sizeof(int),
-			(void *) &iNextLayerSize);
+		for (int iLayer { 0 }; iLayer< Constants::ITS::TrackletsPerRoad; ++iLayer) {
 
-		oclKernel.setArg(0, pvcStruct.bPrimaryVertex);
-		oclKernel.setArg(1, pvcStruct.bClusters[iLayer]);
-		oclKernel.setArg(2, pvcStruct.bClusters[iLayer+1]);
-		oclKernel.setArg(3, pvcStruct.bIndexTable[iLayer]);
-		oclKernel.setArg(4, pvcStruct.bTracklets[iLayer]);
-		oclKernel.setArg(5, bLayerID);
-		oclKernel.setArg(6, bCurrentTrackletPosition);
-		oclKernel.setArg(7, bCurrentLayerSize);
-		oclKernel.setArg(8, bNextLayerSize);
-		oclKernel.setArg(9, bTrackletClusterTable);
+			outFileTracklet<<"From layer "<<iLayer<<" to "<<iLayer+1<<"\n";
+			cl::CommandQueue oclCommandQueue=oclCommandqueues[iLayer];
+			int clustersNum=primaryVertexContext.getClusters()[iLayer].size();
+			int iNextLayerSize=primaryVertexContext.getClusters()[iLayer+1].size();
 
-		warpSize=192;
-		while(true){
-			if(pvcStruct.mClusters[iLayer].size%warpSize!=0)
-				warpSize--;
-			else
-				break;
-		}
+			cl::Buffer bTrackletClusterTable;
+			if(iLayer>0){
+				int *trackletClusterPreviousLayerTable=(int*)malloc(clustersNum*sizeof(int));
+				memset(trackletClusterPreviousLayerTable,-1,clustersNum*sizeof(int));
+				bTrackletClusterTable = cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+						clustersNum*sizeof(int),
+						(void *) &trackletClusterPreviousLayerTable[0]);
+			}
+			else{
+				int fakeVector;
+				bTrackletClusterTable = cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+						sizeof(int),
+						(void *) &fakeVector);
+			}
 
-		//outFilePre << "\nWorkGroup="<<myWorkGroupSize<<"\n";
+			cl::Buffer bLayerID = cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(int),
+				(void *) &iLayer);
 
-			// Do the work
-		oclCommandQueue.enqueueNDRangeKernel(
-			oclKernel,
-			cl::NullRange,
+			//buffer per l'atomic_add
+			int iCurrentPosition=-1;
+			cl::Buffer bCurrentTrackletPosition = cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+				sizeof(int),
+				(void *) &iCurrentPosition);
 
-			cl::NDRange(pvcStruct.mClusters[iLayer].size),
-			//cl::NullRange);
-			//cl::NullRange);
-			warpSize);
+			cl::Buffer bCurrentLayerSize = cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(int),
+				(void *) &clustersNum);
+
+			cl::Buffer bNextLayerSize = cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(int),
+				(void *) &iNextLayerSize);
+
+			oclKernel.setArg(0, pvcStruct.bPrimaryVertex);
+			oclKernel.setArg(1, pvcStruct.bClusters[iLayer]);
+			oclKernel.setArg(2, pvcStruct.bClusters[iLayer+1]);
+			oclKernel.setArg(3, pvcStruct.bIndexTable[iLayer]);
+			oclKernel.setArg(4, pvcStruct.bTracklets[iLayer]);
+			oclKernel.setArg(5, bLayerID);
+			oclKernel.setArg(6, bCurrentTrackletPosition);
+			oclKernel.setArg(7, bCurrentLayerSize);
+			oclKernel.setArg(8, bNextLayerSize);
+			oclKernel.setArg(9, bTrackletClusterTable);
+
+			workgroupSize=128;
+			while(true){
+				if(pvcStruct.mClusters[iLayer].size%workgroupSize!=0)
+					workgroupSize--;
+				else
+					break;
+			}
+
+				// Do the work
+
+			t1=clock();
+			oclCommandQueue.enqueueNDRangeKernel(
+				oclKernel,
+				cl::NullRange,
+				cl::NDRange(clustersNum),
+				cl::NDRange(workgroupSize));
+
+
+			int* trackletsFound = (int *) oclCommandQueue.enqueueMapBuffer(
+					bCurrentTrackletPosition,
+					//bTrackletFound,
+					CL_TRUE, // block
+					CL_MAP_READ,
+					0,
+					sizeof(int)
+			);
+			(*trackletsFound)++;
 /*
-		if(iLayer>0){
-			int* iTrackletFound = (int *) oclCommandQueue.enqueueMapBuffer(
-				bTrackletClusterTable,
-				CL_TRUE, // block
-				CL_MAP_READ,
-				0,
-				sizeof(int));
-			for(int j=0;j<previousLayerClusterSize;j++){
-				printf("[%d][%d]=%d\n",iLayer,j,iTrackletFound[j]);
-				//totalSum+=iTrackletFound[j];
-			}
-		}
-*/
-
-		TrackletStruct* output = (TrackletStruct *) oclCommandQueue.enqueueMapBuffer(
+			TrackletStruct* output = (TrackletStruct *) oclCommandQueue.enqueueMapBuffer(
 				pvcStruct.bTracklets[iLayer],
-				//bTrackletFound,
 				CL_TRUE, // block
 				CL_MAP_READ,
 				0,
-				pvcStruct.mTracklets[iLayer].size * sizeof(TrackletStruct)
-		);
+				(*trackletsFound) * sizeof(TrackletStruct)
+			);
 
-		for(int i=0;i<pvcStruct.mTracklets[iLayer].size;i++){
-			if(output[i].firstClusterIndex!=0 || output[i].secondClusterIndex!=0){
-				//outFile << output[i].firstClusterIndex << "\t" << output[i].secondClusterIndex << "\t" << output[i].tanLambda << "\t" << output[i].phiCoordinate << "\n";
-				partialSum++;
+
+			if(iLayer>0){
+				clogs::ScanProblem problem;
+				problem.setType(clogs::TYPE_UINT);
+				clogs::Scan scanner(oclContext, oclDevice, problem);
+
+				scanner.enqueue(oclCommandQueue, bTrackletClusterTable, bTrackletClusterTable, clustersNum);
+
 			}
-		}
-		totalSum+=partialSum;
-		//outFile<<"Tracklets found = "<<partialSum<<"\n";
-		//std::cout<<"Tracklets found = "<<partialSum<<std::endl;
-
-		}
-
-		//std::cout<<"TOTAL= "<<totalSum<<std::endl;
+*/			std::cout<<"TOTAL= "<<(*trackletsFound)<<std::endl;
+	}
 		//outFile<<"TOTAL= "<<totalSum<<"\n";
 	}
 	catch(const cl::Error &err){
@@ -469,7 +244,11 @@ try{
 		std::cout<<"Errore non opencl"<<std::endl;
 		throw std::runtime_error {"ERRORE NON OPENCL"};
 	}
+	t2=clock();
+	const float diff=((float)t2-(float)t1)/(CLOCKS_PER_SEC/1000);
 
+
+	std::cout << "Time = "<<diff<<std::endl;
 
 
 
