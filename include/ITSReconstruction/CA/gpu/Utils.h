@@ -37,6 +37,7 @@ namespace Utils {
 #if TRACKINGITSU_OCL_MODE
 char *OCLErr_code (int err_in);
 cl::Kernel CreateKernelFromFile(cl::Context, cl::Device device, const char* fileName, const char* kernelName);
+int getOclWorkGroup(int workItemsNumber,int warpSize);
 #endif
 
 namespace Host {

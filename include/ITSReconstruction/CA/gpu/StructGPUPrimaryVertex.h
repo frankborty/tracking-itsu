@@ -76,16 +76,20 @@
 	typedef struct {
 		Float3Struct mPrimaryVertex;
 		cl::Buffer bPrimaryVertex;
+		cl::Buffer bLayerId[o2::ITS::CA::Constants::ITS::LayersNumber];
+
+		cl::Buffer bTrackletsFoundForLayer;	//store the number of tracklets found for each layer
 
 		int ClusterSize;
 		VectStruct mClusters[o2::ITS::CA::Constants::ITS::LayersNumber];
 		cl::Buffer bClusters[o2::ITS::CA::Constants::ITS::LayersNumber];
-		cl::Buffer bClustersSize;
+		cl::Buffer bLayerClustersSize;	//store an array containing the number of clusters for each layer
 
 		int CellsSize;
+		cl::Buffer bCellsSize;
 		VectStruct mCells[o2::ITS::CA::Constants::ITS::CellsPerRoad];
 		cl::Buffer bCells[o2::ITS::CA::Constants::ITS::CellsPerRoad];
-		cl::Buffer bCellsSize;
+
 
 		int CellsLookupTableSize;
 		VectStruct mCellsLookupTable[o2::ITS::CA::Constants::ITS::CellsPerRoad - 1];
@@ -108,7 +112,6 @@
 		int TrackletLookupTableSize;
 		VectStruct mTrackletLookupTable [o2::ITS::CA::Constants::ITS::CellsPerRoad];
 		cl::Buffer bTrackletLookupTable [o2::ITS::CA::Constants::ITS::CellsPerRoad];
-		cl::Buffer bTrackletLookupTableSize;
 
 		cl::Kernel firstPhaseKernel;
 

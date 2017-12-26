@@ -63,7 +63,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   }
 
   std::vector<std::unordered_map<int, Label>> labelsMap;
-  //bool createBenchmarkData = true;
+  bool createBenchmarkData = true;
   std::ofstream correctRoadsOutputStream;
   std::ofstream duplicateRoadsOutputStream;
   std::ofstream fakeRoadsOutputStream;
@@ -86,8 +86,8 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   }
 
 
-  //clock_t t1, t2;
-  //float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
+  clock_t t1, t2;
+  float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
 #if defined MEMORY_BENCHMARK
   std::ofstream memoryBenchmarkOutputStream;
   memoryBenchmarkOutputStream.open(benchmarkFolderName + "MemoryOccupancy.txt");
@@ -99,7 +99,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   // Prevent cold cache benchmark noise
   Tracker<TRACKINGITSU_GPU_MODE> tracker{};
   tracker.clustersToTracks(events[0]);
-/*
+
 #if defined GPU_PROFILING_MODE
   Utils::Host::gpuStartProfiler();
 #endif
@@ -175,7 +175,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   std::cout << std::endl;
   std::cout << "Avg time: " << totalTime / verticesNum << "ms" << std::endl;
   std::cout << "Min time: " << minTime << "ms" << std::endl;
-  std::cout << "Max time: " << maxTime << "ms" << std::endl;*/
+  std::cout << "Max time: " << maxTime << "ms" << std::endl;
  // std::cout << "END" << std::endl;
   return 0;
 }

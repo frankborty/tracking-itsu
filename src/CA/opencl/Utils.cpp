@@ -79,6 +79,17 @@ namespace GPU
 {
 
 
+int Utils::getOclWorkGroup(int workItemsNumber,int warpSize){
+	int maxWorkGroupSize=128;
+	while(true){
+		if(maxWorkGroupSize<=0)
+			return maxWorkGroupSize;
+		if(/*maxWorkGroupSize%warpSize==0 && */workItemsNumber%maxWorkGroupSize==0)
+			return maxWorkGroupSize;
+		maxWorkGroupSize--;
+	}
+}
+
 cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDevice, const char* fileName,const char* kernelName){
 	//std::cout << "CreateKernelFromFile: "<<fileName <<"... ";
 	cl::Kernel kernel;
@@ -120,7 +131,6 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 
 		throw std::runtime_error { errString };
 	}
-	std::cout<<"compilation completed"<<std::endl;
 	return kernel;
 }
 
