@@ -26,8 +26,8 @@
 
 #if TRACKINGITSU_OCL_MODE
 #include <CL/cl.hpp>
-#include <clogs/clogs.h>
-#include <clogs/scan.h>
+//#include <clogs/clogs.h>
+//#include <clogs/scan.h>
 #include "ITSReconstruction/CA/gpu/myThresholds.h"
 #endif
 
