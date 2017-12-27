@@ -72,7 +72,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
     verticesNum += events[iEvent].getPrimaryVerticesNum();
   }
 
-
+/*
   if (argv[2] != NULL) {
 
     std::string labelsFileName(argv[2]);
@@ -84,7 +84,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
     duplicateRoadsOutputStream.open(benchmarkFolderName + "DuplicateRoads.txt");
     fakeRoadsOutputStream.open(benchmarkFolderName + "FakeRoads.txt");
   }
-
+*/
 
   clock_t t1, t2;
   float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
@@ -93,12 +93,13 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   memoryBenchmarkOutputStream.open(benchmarkFolderName + "MemoryOccupancy.txt");
 #elif defined TIME_BENCHMARK
   std::ofstream timeBenchmarkOutputStream;
-  timeBenchmarkOutputStream.open(benchmarkFolderName + "TimeOccupancy.txt");
+  timeBenchmarkOutputStream.open("../TimeOccupancy.txt");
 #endif
 
   // Prevent cold cache benchmark noise
   Tracker<TRACKINGITSU_GPU_MODE> tracker{};
   tracker.clustersToTracks(events[0]);
+  //tracker.clustersToTracksTimeBenchmark(events[0],timeBenchmarkOutputStream);
 
 #if defined GPU_PROFILING_MODE
   Utils::Host::gpuStartProfiler();
@@ -140,7 +141,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
         minTime = diff;
       if (maxTime < diff)
         maxTime = diff;
-
+/*
       for(int iVertex = 0; iVertex < currentEvent.getPrimaryVerticesNum(); ++iVertex) {
 
         std::cout << "Found " << roads[iVertex].size() << " roads for vertex " << iVertex + 1 << std::endl;
@@ -152,7 +153,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 
         std::cout << "Vertex processing mean time: " << diff / currentEvent.getPrimaryVerticesNum() << "ms" << std::endl;
       }
-
+*/
       std::cout << std::endl;
 
       if (createBenchmarkData) {
@@ -177,6 +178,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   std::cout << "Min time: " << minTime << "ms" << std::endl;
   std::cout << "Max time: " << maxTime << "ms" << std::endl;
  // std::cout << "END" << std::endl;
+
   return 0;
 }
 

@@ -151,7 +151,13 @@ int getBinIndex(int zIndex,int phiIndex)
 	return myMin(phiIndex * PhiBins + zIndex,ZBins * PhiBins);
 }
 
-
+__kernel void openClScan(__global int *in, __global int *out)
+{
+	int in_data;
+	int i = get_global_id(0);
+	in_data = in[i];
+	out[i] = work_group_scan_exclusive_add(in_data);
+}
 
 __kernel void countLayerTracklets(
 				__global Float3Struct* primaryVertex,	//0

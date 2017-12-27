@@ -114,9 +114,9 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 		std::vector<cl::Device> oclDeviceList;
 		oclDeviceList.push_back(oclDevice);
 		char buildOption[100];
-		sprintf(buildOption,"-cl-unsafe-math-optimizations -cl-fast-relaxed-math");
+		sprintf(buildOption,"-cl-std=CL2.0 -cl-unsafe-math-optimizations -cl-fast-relaxed-math");
 		//std::cout<<"kernel option "<<buildOption<<std::endl;
-		program.build(oclDeviceList);
+		program.build(oclDeviceList,buildOption);
 		kernel=cl::Kernel(program,kernelName);
 	}
 	catch(const cl::Error &err){

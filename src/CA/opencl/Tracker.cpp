@@ -105,11 +105,51 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 		cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
 		cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
-		//cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
+		cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
 		PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
 		//must be move to oclContext create
 		cl::Kernel oclCountKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
 		cl::Kernel oclComputeKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
+
+		//
+		cl::Kernel oclTestKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","openClScan");
+/*		int A[]={3,1,7,0};
+		int B[4]={0};
+
+		cl::Buffer bA = cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+						4*sizeof(int),
+						(void *) &A[0]);
+		cl::Buffer bB = cl::Buffer(
+						oclContext,
+						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+						4*sizeof(int),
+						(void *) &B[0]);
+
+		oclTestKernel.setArg(0, bA);
+		oclTestKernel.setArg(1, bB);
+
+		oclCommandQueue.enqueueNDRangeKernel(
+			oclTestKernel,
+			cl::NullRange,
+			cl::NDRange(4),
+			cl::NullRange);
+
+		oclCommandQueue.flush();
+		int *output = (int *) oclCommandQueue.enqueueMapBuffer(
+				bB,
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				4*sizeof(int)
+		);
+		std::cout<<"B[0] = "<<output[0]<<std::endl;
+		std::cout<<"B[1] = "<<output[1]<<std::endl;
+		std::cout<<"B[2] = "<<output[2]<<std::endl;
+		std::cout<<"B[3] = "<<output[3]<<std::endl;
+*/
+		///////////////////////////
 
 		//int warpSize=GPU::Context::getInstance().getDeviceProperties().warpSize;
 
@@ -208,6 +248,22 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				clogs::Scan scanner(oclContext, oclDevice, problem);
 				oclCommandqueues[iLayer].finish();
 				scanner.enqueue(oclCommandqueues[iLayer], bTrackletLookUpTable, bTrackletLookUpTable, clustersNum);
+				/*
+				oclTestKernel.setArg(0, bTrackletLookUpTable);
+				oclTestKernel.setArg(1, bTrackletLookUpTable);
+
+				int pseudoClusterNumber=clustersNum;
+				if((clustersNum % workgroupSize)!=0){
+					int mult=clustersNum/workgroupSize;
+					pseudoClusterNumber=(mult+1)*workgroupSize;
+				}
+
+				oclCommandqueues[iLayer].enqueueNDRangeKernel(
+					oclTestKernel,
+					cl::NullRange,
+					cl::NDRange(pseudoClusterNumber),
+					cl::NDRange(workgroupSize));
+				*/
 			}
 			else{
 				clogs::ScanProblem problem;
@@ -215,14 +271,30 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				clogs::Scan scanner(oclContext, oclDevice, problem);
 				oclCommandqueues[iLayer].finish();
 				scanner.enqueue(oclCommandqueues[iLayer], pvcStruct.bTrackletLookupTable[iLayer-1], pvcStruct.bTrackletLookupTable[iLayer-1], clustersNum);
+				/*
+				oclTestKernel.setArg(0, pvcStruct.bTrackletLookupTable[iLayer-1]);
+				oclTestKernel.setArg(1, pvcStruct.bTrackletLookupTable[iLayer-1]);
+
+				int pseudoClusterNumber=clustersNum;
+				if((clustersNum % workgroupSize)!=0){
+					int mult=clustersNum/workgroupSize;
+					pseudoClusterNumber=(mult+1)*workgroupSize;
+				}
+
+				oclCommandqueues[iLayer].enqueueNDRangeKernel(
+					oclTestKernel,
+					cl::NullRange,
+					cl::NDRange(pseudoClusterNumber),
+					cl::NDRange(workgroupSize));
+*/
 			}
 			ty=clock();
 			//float time = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			//std::cout<< "\t " << iLayer <<" time = "<<time<<" ms" << std::endl;
 		}
 		t2 = clock();
-		//float scanTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
-		//std::cout<< "scanTrack time " << scanTrack <<" ms" << std::endl;
+		float scanTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+		std::cout<< "scanTrack time " << scanTrack <<" ms" << std::endl;
 
 		//calcolo le tracklet
 		//std::cout<<"calcolo le tracklet"<<std::endl;
