@@ -243,12 +243,12 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			tx=clock();
 			clustersNum=primaryVertexContext.getClusters()[iLayer].size();
 			if(iLayer==0){
-				clogs::ScanProblem problem;
+				/*clogs::ScanProblem problem;
 				problem.setType(clogs::TYPE_UINT);
 				clogs::Scan scanner(oclContext, oclDevice, problem);
 				oclCommandqueues[iLayer].finish();
 				scanner.enqueue(oclCommandqueues[iLayer], bTrackletLookUpTable, bTrackletLookUpTable, clustersNum);
-				/*
+				*/
 				oclTestKernel.setArg(0, bTrackletLookUpTable);
 				oclTestKernel.setArg(1, bTrackletLookUpTable);
 
@@ -263,15 +263,15 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 					cl::NullRange,
 					cl::NDRange(pseudoClusterNumber),
 					cl::NDRange(workgroupSize));
-				*/
+
 			}
 			else{
-				clogs::ScanProblem problem;
+				/*clogs::ScanProblem problem;
 				problem.setType(clogs::TYPE_UINT);
 				clogs::Scan scanner(oclContext, oclDevice, problem);
 				oclCommandqueues[iLayer].finish();
 				scanner.enqueue(oclCommandqueues[iLayer], pvcStruct.bTrackletLookupTable[iLayer-1], pvcStruct.bTrackletLookupTable[iLayer-1], clustersNum);
-				/*
+				*/
 				oclTestKernel.setArg(0, pvcStruct.bTrackletLookupTable[iLayer-1]);
 				oclTestKernel.setArg(1, pvcStruct.bTrackletLookupTable[iLayer-1]);
 
@@ -286,7 +286,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 					cl::NullRange,
 					cl::NDRange(pseudoClusterNumber),
 					cl::NDRange(workgroupSize));
-*/
+
 			}
 			ty=clock();
 			//float time = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
