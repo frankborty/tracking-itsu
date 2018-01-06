@@ -85,9 +85,7 @@ class PrimaryVertexContext
 //#endif
 
 #if TRACKINGITSU_OCL_MODE
-        PrimaryVertexContestStruct mPrimaryVertexStruct;
-        int  iPrimaryVertexStructSize;
-        cl::Buffer mPrimaryVertexBuffer;
+        o2::ITS::CA::GPU::PrimaryVertexContext openClPrimaryVertexContext;
 #endif
 
       private:

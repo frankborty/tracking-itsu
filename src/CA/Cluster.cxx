@@ -11,7 +11,11 @@
 /// \file Cluster.cxx
 /// \brief
 ///
-
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <fstream>
+#include <vector>
 #include "ITSReconstruction/CA/Cluster.h"
 
 #include "ITSReconstruction/CA/IndexTableUtils.h"
@@ -41,7 +45,9 @@ Cluster::Cluster(const int layerIndex, const float3 &primaryVertex, const Cluste
         IndexTableUtils::getBinIndex(IndexTableUtils::getZBinIndex(layerIndex, zCoordinate),
             IndexTableUtils::getPhiBinIndex(phiCoordinate)) }
 {
-  // Nothing to do
+
+
+
 }
 
 }

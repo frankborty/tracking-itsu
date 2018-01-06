@@ -35,7 +35,9 @@
 #include "ITSReconstruction/CA/TrackingUtils.h"
 
 #if TRACKINGITSU_OCL_MODE
+
 #include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
+
 #include "ITSReconstruction/CA/gpu/Context.h"
 #include "ITSReconstruction/CA/gpu/Utils.h"
 #define __CL_ENABLE_EXCEPTIONS //enable exceptions
@@ -48,210 +50,7 @@ namespace ITS
 {
 namespace CA
 {
-#if TRACKINGITSU_GPU_MODE
-void fillPrimaryVertexStruct(PrimaryVertexContext& mPrimaryVertexContext){
 
-	PrimaryVertexContestStruct srPvc;
-	std::vector<int> sizeVector;
-
-	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
-
-
-	//primaryVertex [float3]
-	srPvc.mPrimaryVertex.x=mPrimaryVertexContext.getPrimaryVertex().x;
-	srPvc.mPrimaryVertex.y=mPrimaryVertexContext.getPrimaryVertex().y;
-	srPvc.mPrimaryVertex.z=mPrimaryVertexContext.getPrimaryVertex().z;
-
-
-	try{
-
-		//buffer for layerId
-		int iLayerId[]={0,1,2,3,4,5,6};
-		for(int i=0;i<o2::ITS::CA::Constants::ITS::LayersNumber;i++){
-			srPvc.bLayerId[i]=cl::Buffer(
-				oclContext,
-				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				sizeof(int),
-				(void *) &(iLayerId[i]));
-		}
-
-
-		int iTrackletsFoundForLayer[]={0,0,0,0,0,0,0};
-		srPvc.bTrackletsFoundForLayer=cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-			o2::ITS::CA::Constants::ITS::LayersNumber*sizeof(int),
-			(void *) &(iTrackletsFoundForLayer[0]));
-
-		srPvc.bPrimaryVertex = cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			3*sizeof(float),
-			(void *) &mPrimaryVertexContext.getPrimaryVertex());
-
-
-		//clusters
-		std::vector<int> sizeVector1;
-		srPvc.ClusterSize=o2::ITS::CA::Constants::ITS::LayersNumber;
-		for(int i=0;i<srPvc.ClusterSize;i++){
-			srPvc.mClusters[i].size=mPrimaryVertexContext.getClusters()[i].capacity();
-			srPvc.mClusters[i].srPunt=&(mPrimaryVertexContext.getClusters()[i]).front();
-			if(srPvc.mClusters[i].size!=0){
-				srPvc.bClusters[i]=cl::Buffer(
-						oclContext,
-						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-						srPvc.mClusters[i].size*sizeof(ClusterStruct),
-						(void *) &(mPrimaryVertexContext.getClusters()[i]).front());
-			}
-			else
-				srPvc.bClusters[i]=NULL;
-			sizeVector.push_back(srPvc.mClusters[i].size);
-		}
-		srPvc.bLayerClustersSize =cl::Buffer(
-						oclContext,
-						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-						srPvc.ClusterSize*sizeof(int),
-						(void *) &(sizeVector[0]));
-		sizeVector.clear();
-/*
-		//cells
-		srPvc.CellsSize=mPrimaryVertexContext.getCells().size();
-		for(int i=0;i<srPvc.CellsSize;i++){
-			srPvc.mCells[i].size=mPrimaryVertexContext.getCells()[i].capacity();
-			srPvc.mCells[i].srPunt=&(mPrimaryVertexContext.getCells()[i]).front();
-			if(srPvc.mCells[i].size!=0){
-				srPvc.bCells[i]=cl::Buffer(
-						oclContext,
-						(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-						srPvc.mCells[i].size*sizeof(CellStruct),
-						(void *) &(mPrimaryVertexContext.getCells()[i]).front());
-			}
-			else
-				srPvc.bCells[i]=NULL;
-			sizeVector.push_back(srPvc.mCells[i].size);
-		}
-		srPvc.bCellsSize =cl::Buffer(
-			oclContext,
-			(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-			srPvc.CellsSize*sizeof(int),
-			(void *) &(sizeVector));
-			sizeVector.clear();
-
-		//cellsLookupTable
-		srPvc.CellsLookupTableSize=mPrimaryVertexContext.getCells().size();
-		for(int i=0;i<srPvc.CellsLookupTableSize;i++){
-			srPvc.mCellsLookupTable[i].size=mPrimaryVertexContext.getCellsLookupTable()[i].capacity();
-			srPvc.mCellsLookupTable[i].srPunt=&(mPrimaryVertexContext.getCellsLookupTable()[i]).front();
-			if(srPvc.mCellsLookupTable[i].size!=0){
-				srPvc.bCellsLookupTable[i]=cl::Buffer(
-							oclContext,
-							(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-							srPvc.mCellsLookupTable[i].size*sizeof(int),
-							(void *) &(mPrimaryVertexContext.getCellsLookupTable()[i]).front());
-			}
-			else
-				srPvc.bCellsLookupTable[i]=NULL;
-			sizeVector.push_back(srPvc.mCellsLookupTable[i].size);
-		}
-		srPvc.bCellsLookupTableSize =cl::Buffer(
-				oclContext,
-				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				srPvc.CellsLookupTableSize*sizeof(int),
-				(void *) &(sizeVector));
-		sizeVector.clear();
-
-*/
-		//indexTable
-		srPvc.IndexTableSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
-		for(int i=0;i<srPvc.IndexTableSize;i++){
-			srPvc.mIndexTable[i].size=mPrimaryVertexContext.getIndexTables()[i].size();
-			srPvc.mIndexTable[i].srPunt=&(mPrimaryVertexContext.getIndexTables()[i]).front();
-			if(srPvc.mIndexTable[i].size!=0){
-				srPvc.bIndexTable[i]=cl::Buffer(
-						oclContext,
-						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-						srPvc.mIndexTable[i].size*sizeof(int),
-						(void *) &(mPrimaryVertexContext.getIndexTables()[i]).front());
-			}
-			else
-				srPvc.bIndexTable[i]=NULL;
-			sizeVector.push_back(srPvc.mIndexTable[i].size);
-		}
-		srPvc.bIndexTableSize =cl::Buffer(
-					oclContext,
-					(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-					srPvc.IndexTableSize*sizeof(int),
-					(void *) &(sizeVector));
-		sizeVector.clear();
-
-
-		//tracklets
-		srPvc.TrackeltsSize=o2::ITS::CA::Constants::ITS::TrackletsPerRoad;
-		for(int i=0;i<srPvc.TrackeltsSize;i++){
-			srPvc.mTracklets[i].size=mPrimaryVertexContext.getTracklets()[i].capacity();
-			srPvc.mTracklets[i].srPunt=&(mPrimaryVertexContext.getTracklets()[i]).front();
-			if(srPvc.mTracklets[i].size!=0){
-				srPvc.bTracklets[i]=cl::Buffer(
-						oclContext,
-						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-						srPvc.mTracklets[i].size*sizeof(TrackletStruct),
-						(void *) &(mPrimaryVertexContext.getTracklets()[i]).front());
-			}
-			else
-				srPvc.bTracklets[i]=NULL;
-			sizeVector.push_back(srPvc.mTracklets[i].size);
-		}
-		srPvc.bTrackletsSize =cl::Buffer(
-					oclContext,
-					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-					srPvc.TrackeltsSize*sizeof(TrackletStruct),
-					(void *) &(sizeVector));
-		sizeVector.clear();
-
-
-
-		//trackletLookupTable
-		srPvc.TrackletLookupTableSize=mPrimaryVertexContext.getTrackletsLookupTable().size();
-		for(int i=0;i<o2::ITS::CA::Constants::ITS::CellsPerRoad;i++){
-			srPvc.mTrackletLookupTable[i].size=mPrimaryVertexContext.getClusters()[i+1].capacity();
-			srPvc.mTrackletLookupTable[i].srPunt=&(mPrimaryVertexContext.getTrackletsLookupTable()[i]).front();
-			srPvc.bTrackletLookupTable[i]=cl::Buffer(
-					oclContext,
-					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-					srPvc.mTrackletLookupTable[i].size*sizeof(int),
-					(void *) &(mPrimaryVertexContext.getTrackletsLookupTable()[i]).front());
-		}
-
-		//std::cout<<"[BaseStruct]: "<<iSize<< "\tTOTAL: "<<iTotalSize << std::endl;
-		//std::cout<<"C struct associated with primary vertex initialized"<< std::endl;
-
-
-		mPrimaryVertexContext.mPrimaryVertexStruct=srPvc;
-
-/*
-		cl::Context oclContext;
-		cl::Device  oclDevice;
-
-		std::string deviceName=o2::ITS::CA::GPU::Context::getInstance().getDeviceProperties().name;
-		std::cout<< "Device selected:"<<deviceName<<std::endl;
-		oclContext=o2::ITS::CA::GPU::Context::getInstance().getDeviceProperties().oclContext;
-		oclDevice=o2::ITS::CA::GPU::Context::getInstance().getDeviceProperties().oclDevice;
-
-		std::vector<cl::Device> devices;
-		devices.push_back(oclDevice);
-*/
-//		oclKernel.setArg(0,srPvc.bPrimaryVertex);
-
-	}
-	catch(const cl::Error &err){
-		std::string errString=o2::ITS::CA::GPU::Utils::OCLErr_code(err.err());
-		std::cout<< errString << std::endl;
-		throw std::runtime_error { errString };
-	}
-
-	return;
-}
-#endif
 
 
 
@@ -327,19 +126,24 @@ void TrackerTraits<false>::computeLayerTracklets(PrimaryVertexContext& primaryVe
 
             primaryVertexContext.getTracklets()[iLayer].emplace_back(iCluster, iNextLayerCluster, currentCluster,
                 nextCluster);
+
           }
         }
       }
     }
   }
-  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-  	  outFile<<"From layer "<<iLayer<<" to "<<iLayer+1<<"\n";
-  	  int size=primaryVertexContext.getTrackletsLookupTable()[iLayer].size();
-  	  for(int i=0;i<size;i++){
+  int totalTracklets=0;
+  for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
+
+  	  int size=primaryVertexContext.getTracklets()[iLayer].size();
+  	  totalTracklets+=size;
+/*  	  for(int i=0;i<size;i++){
   		  int v=primaryVertexContext.getTrackletsLookupTable()[iLayer][i];
   			outFile << i << "\t"<<v<<"\n";
   	  }
+*/
   }
+  std::cout<<"Total tracklets found = "<<totalTracklets<<std::endl;
 
 }
 
@@ -477,17 +281,91 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
   roads.reserve(verticesNum);
 
   for (int iVertex { 0 }; iVertex < verticesNum; ++iVertex) {
+	clock_t t1 { }, t2 { };
+	float diff { };
+
+	t1 = clock();
 
 	mPrimaryVertexContext.initialize(event, iVertex);
-
-	//fill c struct associated to primary vertex
-#if TRACKINGITSU_GPU_MODE
-	fillPrimaryVertexStruct(mPrimaryVertexContext);
-#endif
-	evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
+#if !TRACKINGITSU_GPU_MODE
 /*
-	computeTracklets();
-	computeCells();
+	//write to file the sorted list of clusters
+	const char outputFileName[] = "../Clusters-cpu.txt";
+	std::ofstream outFileClusters;
+	outFileClusters.open((const char*)outputFileName);
+
+	for(int i=0;i<7;i++){
+		int size=mPrimaryVertexContext.getClusters()[i].size();
+		outFileClusters<<"Clusters layer "<<i<<"\t"<<"size: "<<size<<"\n";
+		for(int j=0;j<size;j++){
+			Cluster cl=mPrimaryVertexContext.getClusters()[i][j];
+			outFileClusters<<cl.clusterId<<"\t"<<cl.xCoordinate<<"\t"<<cl.yCoordinate<<"\t"<<cl.zCoordinate<<"\t"<<cl.indexTableBinIndex<<"\n";
+		}
+	}
+
+	//write to file the index table
+	const char outputFileName2[] = "../IndexTable-cpu.txt";
+	std::ofstream outFileIndexTable;
+	outFileIndexTable.open((const char*)outputFileName2);
+
+	for(int i=0;i<6;i++){
+		int size=Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1;
+		outFileIndexTable<<"IndexTable layer "<<i<<"\t"<<"size: "<<size<<"\n";
+		for(int j=0;j<size;j++){
+			int cl=mPrimaryVertexContext.getIndexTables()[i][j];
+			outFileIndexTable<<"["<<i<<"]["<<j<<"]\t"<<cl<<"\n";
+		}
+	}
+
+*/
+#else
+/*
+	const char outputFileName[] = "../Clusters-ocl.txt";
+	std::ofstream outFileClusters;
+	outFileClusters.open((const char*)outputFileName);
+
+	for(int i=0;i<6;i++){
+		int size=mPrimaryVertexContext.openClPrimaryVertexContext.iClusterSize[i];
+		outFileClusters<<"Clusters layer "<<i<<"\t"<<"size: "<<size<<"\n";
+		for(int j=0;j<size;j++){
+			ClusterStruct cl=mPrimaryVertexContext.openClPrimaryVertexContext.mClusters[i][j];
+			outFileClusters<<cl.clusterId<<"\t"<<cl.xCoordinate<<"\t"<<cl.yCoordinate<<"\t"<<cl.zCoordinate<<"\t"<<cl.indexTableBinIndex<<"\n";
+	  	 }
+	}
+
+	//write to file the index table
+	const char outputFileName2[] = "../IndexTable-ocl.txt";
+	std::ofstream outFileIndexTable;
+	outFileIndexTable.open((const char*)outputFileName2);
+
+	for(int i=0;i<6;i++){
+		int size=Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1;
+		outFileIndexTable<<"IndexTable layer "<<i<<"\t"<<"size: "<<size<<"\n";
+		for(int j=0;j<size;j++){
+			int cl=mPrimaryVertexContext.openClPrimaryVertexContext.mIndexTables[i][j];
+			outFileIndexTable<<"["<<i<<"]["<<j<<"]\t"<<cl<<"\n";
+		}
+	}
+
+*/
+#endif
+
+/*
+	  #if TRACKINGITSU_GPU_MODE
+	  	fillPrimaryVertexStruct(mPrimaryVertexContext);
+	  #endif
+*/
+	      t2 = clock();
+	      diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+	      std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
+	//evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
+
+	      t1 = clock();
+	      computeTracklets();
+	      t2=clock();
+		  diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+		  std::cout << std::setw(2) << " - Compute Tracklets in: " << diff << "ms" << std::endl;
+/*	computeCells();
 	findCellsNeighbours();
 	findTracks();
 	computeMontecarloLabels();
@@ -516,15 +394,13 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     t1 = clock();
 
     mPrimaryVertexContext.initialize(event, iVertex);
-#if TRACKINGITSU_GPU_MODE
-	fillPrimaryVertexStruct(mPrimaryVertexContext);
-#endif
-
     t2 = clock();
     diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
     std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 
-    evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
+
+
+//    evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
 //    evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
 //    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
 //    evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
@@ -621,9 +497,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksTimeBenchmark(
     t1 = clock();
 
     mPrimaryVertexContext.initialize(event, iVertex);
-#if TRACKINGITSU_GPU_MODE
-	fillPrimaryVertexStruct(mPrimaryVertexContext);
-#endif
+
     evaluateTask(&Tracker<IsGPU>::computeTracklets, nullptr, timeBenchmarkOutputStream);
     evaluateTask(&Tracker<IsGPU>::computeCells, nullptr, timeBenchmarkOutputStream);
     evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, nullptr, timeBenchmarkOutputStream);
@@ -925,3 +799,45 @@ template class Tracker<TRACKINGITSU_GPU_MODE> ;
 }
 }
 }
+/*
+////////////////////////////////////////////////
+const int clustersNum = static_cast<int>(mClusters[iLayer].size());
+
+    if(iLayer > 0) {
+
+      int previousBinIndex { 0 };
+      mIndexTables[iLayer - 1][0] = 0;
+
+      for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
+
+        const int currentBinIndex { mClusters[iLayer][iCluster].indexTableBinIndex };
+
+        if (currentBinIndex > previousBinIndex) {
+
+          for (int iBin { previousBinIndex + 1 }; iBin <= currentBinIndex; ++iBin) {
+
+            mIndexTables[iLayer - 1][iBin] = iCluster;
+          }
+
+          previousBinIndex = currentBinIndex;
+        }
+      }
+
+      for (int iBin { previousBinIndex + 1 }; iBin <= Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins;
+          iBin++) {
+
+        mIndexTables[iLayer - 1][iBin] = clustersNum;
+      }
+    }
+/////////////////////////////////////
+
+
+*/
+
+
+
+
+
+
+
+

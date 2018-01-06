@@ -42,7 +42,6 @@ class TrackerTraits
   public:
     void computeLayerTracklets(PrimaryVertexContext&);
     void computeLayerCells(PrimaryVertexContext&);
-    void fillPrimaryVertexStruct(PrimaryVertexContext& );
 
   protected:
     ~TrackerTraits() = default;

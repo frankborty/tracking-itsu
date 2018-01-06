@@ -127,71 +127,38 @@ namespace CA
 namespace GPU
 {
 
+bool myClusterComparator(const ClusterStruct &lhs, const ClusterStruct &rhs)
+{
+	return lhs.indexTableBinIndex < rhs.indexTableBinIndex;
+}
+
+
+
 PrimaryVertexContext::PrimaryVertexContext()
 {
   // Nothing to do
 }
 
-UniquePointer<PrimaryVertexContext> PrimaryVertexContext::initialize(const float3 &primaryVertex,
-    const std::array<std::vector<Cluster>, Constants::ITS::LayersNumber> &clusters,
-    const std::array<std::vector<Cell>, Constants::ITS::CellsPerRoad> &cells,
-    const std::array<std::vector<int>, Constants::ITS::CellsPerRoad - 1> &cellsLookupTable)
+void  PrimaryVertexContext::sortClusters(int iLayer)
 {
-  /*mPrimaryVertex = UniquePointer<float3>{ primaryVertex };
-  for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {
-	  this->mClusters[iLayer] = Vector<Cluster> { &clusters[iLayer][0], static_cast<int>(clusters[iLayer].size()) };
-	  //this->mClusters[iLayer]= &clusters[iLayer][0];
-	if (iLayer < Constants::ITS::TrackletsPerRoad) {
-	  this->mTracklets[iLayer].reset(static_cast<int>(std::ceil(
-		  (Constants::Memory::TrackletsMemoryCoefficients[iLayer] * clusters[iLayer].size())* clusters[iLayer + 1].size())));
-	}
-
-	if (iLayer < Constants::ITS::CellsPerRoad) {
-	  this->mTrackletsLookupTable[iLayer].reset(static_cast<int>(clusters[iLayer + 1].size()));
-	  this->mTrackletsPerClusterTable[iLayer].reset(static_cast<int>(clusters[iLayer + 1].size()));
-	  this->mCells[iLayer].reset(static_cast<int>(cells[iLayer].capacity()));
-	}
-
-    if (iLayer < Constants::ITS::CellsPerRoad - 1) {
-      this->mCellsLookupTable[iLayer].reset(static_cast<int>(cellsLookupTable[iLayer].size()));
-      this->mCellsPerTrackletTable[iLayer].reset(static_cast<int>(cellsLookupTable[iLayer].size()));
-    }
-  }
-*/
-  UniquePointer<PrimaryVertexContext> gpuContextDevicePointer { *this };
-
-  /*std::array<Stream, Constants::ITS::LayersNumber> streamArray;
-
-  //creo i kernel necessari
-  cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
-  cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
-  cl::Kernel oclKernel=Utils::CreateKernelFromFile(oclContext,oclDevice,"src/kernel/fillIndexTables.cl","fillIndexTables");
-
-
-  for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
-
-	  const int nextLayerClustersNum = static_cast<int>(clusters[iLayer + 1].size());
-
-	  dim3 threadsPerBlock { Utils::Host::getBlockSize(nextLayerClustersNum) };
-	  dim3 blocksGrid { Utils::Host::getBlocksGrid(threadsPerBlock, nextLayerClustersNum) };
-
-	  fillDeviceStructures(*gpuContextDevicePointer, iLayer);
-	  fillDeviceStructures<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(*gpuContextDevicePointer, iLayer);
-
-		cudaError_t error = cudaGetLastError();
-
-		if (error != cudaSuccess) {
-
-		  std::ostringstream errorString { };
-		  errorString << __FILE__ << ":" << __LINE__ << " CUDA API returned error [" << cudaGetErrorString(error)
-			  << "] (code " << error << ")" << std::endl;
-
-		  throw std::runtime_error { errorString.str() };
+	std::sort(this->mClusters[iLayer],this->mClusters[iLayer]+this->iClusterSize[iLayer],myClusterComparator);
 }
-  }
-*/
-  return gpuContextDevicePointer;
 
+
+void PrimaryVertexContext::initialize(cl::Context oclContext)
+{
+	for(int i=0;i<Constants::ITS::LayersNumber;i++){
+		this->bLayerIndex[i]=cl::Buffer(oclContext,
+		(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+		sizeof(int),
+		(void *) &(i));
+	}
+	int iTrackletsFoundForLayer[]={0,0,0,0,0,0,0};
+	this->bTrackletsFoundForLayer=cl::Buffer(
+		oclContext,
+		(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+		o2::ITS::CA::Constants::ITS::LayersNumber*sizeof(int),
+		(void *) iTrackletsFoundForLayer);
 }
 
 }

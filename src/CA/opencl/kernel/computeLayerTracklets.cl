@@ -155,8 +155,13 @@ __kernel void openClScan(__global int *in, __global int *out)
 {
 	int in_data;
 	int i = get_global_id(0);
+	const int numberOfClusterForCurrentLayer=get_global_size(0);
+	
 	in_data = in[i];
 	out[i] = work_group_scan_exclusive_add(in_data);
+	if(i==510){
+		printf("inData=%d\toutData=%d\n",in_data,out[i]);
+	}
 }
 
 __kernel void countLayerTracklets(
@@ -258,7 +263,6 @@ __kernel void computeLayerTracklets(
 {
 	const int currentClusterIndex=get_global_id(0);
 	const int numberOfClusterForCurrentLayer=get_global_size(0);
-	
 	if(currentClusterIndex==numberOfClusterForCurrentLayer)
 		return;	//to fix
 	
@@ -306,6 +310,8 @@ __kernel void computeLayerTracklets(
 
 		    		  if (deltaZ < TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || myAbs(deltaPhi-TwoPi)<PhiCoordinateCut)){
 		    			  __global TrackletStruct* tracklet=&currentLayerTracklets[currentLookUpValue];
+		    			  
+		    			  
 		    			  tracklet->firstClusterIndex=currentClusterIndex;
 		    			  tracklet->secondClusterIndex=iNextLayerCluster;
 		    			  tracklet->tanLambda=(currentCluster->zCoordinate - nextCluster->zCoordinate) / (currentCluster->rCoordinate - nextCluster->rCoordinate);
