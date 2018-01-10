@@ -77,7 +77,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 
     std::string labelsFileName(argv[2]);
 
-    //createBenchmarkData = true;
+    createBenchmarkData = false;
     labelsMap = IOUtils::loadLabels(eventsNum, labelsFileName);
 
     correctRoadsOutputStream.open(benchmarkFolderName + "CorrectRoads.txt");
@@ -98,7 +98,8 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 
   // Prevent cold cache benchmark noise
   Tracker<TRACKINGITSU_GPU_MODE> tracker{};
-  tracker.clustersToTracks(events[0]);
+//  tracker.clustersToTracks(events[0]);
+  tracker.clustersToTracksVerbose(events[0]);
   //tracker.clustersToTracksTimeBenchmark(events[0],timeBenchmarkOutputStream);
 
 #if defined GPU_PROFILING_MODE
@@ -125,7 +126,8 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 #elif defined TIME_BENCHMARK
       std::vector<std::vector<Road>> roads = tracker.clustersToTracksTimeBenchmark(currentEvent, timeBenchmarkOutputStream);
 #else
-      std::vector<std::vector<Road>> roads = tracker.clustersToTracks(currentEvent);
+      std::vector<std::vector<Road>> roads = tracker.clustersToTracksVerbose(currentEvent);
+      //std::vector<std::vector<Road>> roads = tracker.clustersToTracks(currentEvent);
 #endif
 
 #if defined HAVE_VALGRIND

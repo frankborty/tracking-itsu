@@ -28,8 +28,6 @@
 #include <CL/cl.hpp>
 #include <clogs/clogs.h>
 #include <clogs/scan.h>
-//#include <clogs/clogs.h>
-//#include <clogs/scan.h>
 #include "ITSReconstruction/CA/gpu/myThresholds.h"
 #endif
 
@@ -94,12 +92,13 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 {
 	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
 	cl::CommandQueue oclCommandqueues[6];
+	cl::CommandQueue oclCPUCommandqueues[6];
 	cl::Buffer bLayerID;
 	cl::Buffer bTrackletLookUpTable;
 	cl::CommandQueue oclCommandQueue;
 	int *firstLayerLookUpTable;
 	int clustersNum;
-	//time_t t1,t2;
+	time_t t1,t2;
 	//time_t tx,ty;
 	int* trackletsFound;
 	int workgroupSize=5*32;
@@ -110,8 +109,9 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 		cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
 		cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
 
-		//PrimaryVertexContestStruct pvcStruct=(PrimaryVertexContestStruct)primaryVertexContext.mPrimaryVertexStruct;
-		PrimaryVertexContestStruct pvcStruct;
+		std::string deviceName;
+		oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
+		std::cout<< "Device: "<<deviceName<<std::endl;
 
 		//must be move to oclContext create
 		cl::Kernel oclCountKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
@@ -123,9 +123,9 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 		//int warpSize=GPU::Context::getInstance().getDeviceProperties().warpSize;
 
-		for(int i=0;i<6;i++)
-			oclCommandqueues[i]=cl::CommandQueue(oclContext, oclDevice, CL_QUEUE_PROFILING_ENABLE );
-
+		for(int i=0;i<6;i++){
+			oclCommandqueues[i]=cl::CommandQueue(oclContext, oclDevice, 0);
+		}
 		//clustersNum=primaryVertexContext.getClusters()[0].size();
 		clustersNum=primaryVertexContext.openClPrimaryVertexContext.iClusterSize[0];
 
@@ -139,9 +139,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 
 
-		std::string deviceName;
-		oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
-		std::cout<< "Device: "<<deviceName<<std::endl;
+
 /*
 		const char outputFileName[] = "../oclLookupTable-ocl.txt";
 		std::ofstream outFileLookUp;
@@ -151,10 +149,10 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 		const char outputTrackletFileName[] = "../oclTrackletsFound.txt";
 		std::ofstream outFileTracklet;
 		outFileTracklet.open((const char*)outputTrackletFileName);
-		//t0=t1=clock();
+
 */
 
-
+		t1=clock();
 		for (int iLayer{ 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer) {
 			//tx=clock();
   			clustersNum=primaryVertexContext.openClPrimaryVertexContext.iClusterSize[iLayer];
@@ -181,9 +179,9 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				oclCountKernel,
 				cl::NullRange,
 				cl::NDRange(pseudoClusterNumber),
-				//cl::NDRange(workgroupSize));
-				cl::NullRange);
-
+				cl::NDRange(workgroupSize));
+				//cl::NullRange);
+/*
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 					primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
@@ -194,28 +192,36 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			);
 			trackletsFound[iLayer]++;
 			totalTrackletsFound+=trackletsFound[iLayer]-1;
-			//std::cout<<"Tracklet layer "<<iLayer<<" = "<<trackletsFound[iLayer]<<std::endl;
 
+			std::cout<<"Tracklet layer "<<iLayer<<" = "<<trackletsFound[iLayer]<<std::endl;
+*/
 			//ty=clock();
 			//float time = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			//std::cout<< "\tLayer " << iLayer <<" time = "<<time<<" ms" <<"\tWG = " <<workgroupSize<<"\tclusterNr = "<<clustersNum<<"\tpseudoClusterNr = "<<pseudoClusterNumber<<std::endl;
 		}
 
 
-		//t2 = clock();
-		//float countTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
-		//std::cout<< "countTrack time " << countTrack <<" ms" << std::endl;
+		t2 = clock();
+		float countTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+		std::cout<< "countTrack time " << countTrack <<" ms" << std::endl;
 
 		//scan
 		//std::cout<<"scan and sort"<<std::endl;
-		//t1=clock();
-
-
+		t1=clock();
 		for (int iLayer { 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer) {
 			//tx=clock();
 			//outFileLookUp<<"From layer "<<iLayer<<" to "<<iLayer+1<<"\n";
 			clustersNum=primaryVertexContext.openClPrimaryVertexContext.iClusterSize[iLayer];
 			oclCommandqueues[iLayer].finish();
+			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
+					primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
+					CL_TRUE, // block
+					CL_MAP_READ,
+					0,
+					6*sizeof(int)
+			);
+			trackletsFound[iLayer]++;
+			totalTrackletsFound+=trackletsFound[iLayer]-1;
 			if(iLayer==0){
 				clogs::ScanProblem problem;
 				problem.setType(clogs::TYPE_UINT);
@@ -292,13 +298,13 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			//std::cout<< "\t " << iLayer <<" time = "<<time<<" ms" << std::endl;
 		}
 		//std::cout<<"finish sort"<<std::endl;
-		//t2 = clock();
-		//float scanTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
-		//std::cout<< "scanTrack time " << scanTrack <<" ms" << std::endl;
+		t2 = clock();
+		float scanTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+		std::cout<< "scanTrack time " << scanTrack <<" ms" << std::endl;
 
 		//calcolo le tracklet
 		//std::cout<<"calcolo le tracklet"<<std::endl;
-		//t1=clock();
+		t1=clock();
 		for (int iLayer{ 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer) {
 			//tx=clock();
 			//outFileTracklet<<"Tracklets between Layer "<<iLayer<<" and "<<iLayer+1<<"\n";
@@ -362,9 +368,9 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			//std::cout<< "\tLayer " << iLayer <<" time = "<<time<<" ms" <<"\tWG = " <<workgroupSize<<std::endl;
 		}
 		//std::cout<<"finish trackletsFinding"<<std::endl;
-		//t2 = clock();
-		//float findTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
-		//std::cout<< "findTrack time " << findTrack <<" ms" << std::endl;
+		t2 = clock();
+		float findTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+		std::cout<< "findTrack time " << findTrack <<" ms" << std::endl;
 		std::cout<<"Total tracklets found = "<<totalTrackletsFound<<std::endl;
 	}
 	catch(const cl::Error &err){

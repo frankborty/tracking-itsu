@@ -159,9 +159,7 @@ __kernel void openClScan(__global int *in, __global int *out)
 	
 	in_data = in[i];
 	out[i] = work_group_scan_exclusive_add(in_data);
-	if(i==510){
-		printf("inData=%d\toutData=%d\n",in_data,out[i]);
-	}
+
 }
 
 __kernel void countLayerTracklets(

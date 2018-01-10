@@ -112,8 +112,7 @@ class PrimaryVertexContext
 		mClusters[iLayer][iCluster].phiCoordinate=MathUtils::getNormalizedPhiCoordinate(MathUtils::calculatePhiCoordinate(other.xCoordinate - primaryVertex.x, other.yCoordinate - primaryVertex.y));
 		mClusters[iLayer][iCluster].rCoordinate=MathUtils::calculateRCoordinate(other.xCoordinate - primaryVertex.x, other.yCoordinate - primaryVertex.y);
 		mClusters[iLayer][iCluster].indexTableBinIndex=IndexTableUtils::getBinIndex(IndexTableUtils::getZBinIndex(iLayer, other.zCoordinate),IndexTableUtils::getPhiBinIndex(mClusters[iLayer][iCluster].phiCoordinate)) ;
-		/*if(iLayer==0 && (other.clusterId== 57 || other.clusterId==36))
-				std::cout<<"pippo"<<std::endl;*/
+
   }
 /*
   GPU_DEVICE inline int** PrimaryVertexContext::getIndexTables()

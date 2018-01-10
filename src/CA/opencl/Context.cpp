@@ -152,6 +152,9 @@ Context::Context()
 				//store the device
 				mDeviceProperties[iTotalDevice].oclDevice=deviceList[iDevice];
 
+				//store CPU the device
+				mDeviceProperties[iTotalDevice].oclDevice=deviceList[0];
+
 				iTotalDevice++;
 			}
 
@@ -166,6 +169,7 @@ Context::Context()
 	}
 
 	iCurrentDevice=1;
+	iCurrentCPUDevice=0;
 	//std::cout << std::endl<< ">> First device is selected" << std::endl;
 	//create command queue associated to selected device
 	try{
@@ -190,6 +194,11 @@ Context& Context::getInstance()
 const DeviceProperties& Context::getDeviceProperties()
 {
   return getDeviceProperties(iCurrentDevice);
+}
+
+const DeviceProperties& Context::getCPUDeviceProperties()
+{
+  return getDeviceProperties(iCurrentCPUDevice);
 }
 
 const DeviceProperties& Context::getDeviceProperties(const int deviceIndex)
