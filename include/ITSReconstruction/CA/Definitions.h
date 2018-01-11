@@ -23,6 +23,13 @@
 # define TRACKINGITSU_GPU_MODE false
 #endif
 
+#if defined (INCLUDE_CLOGS)
+#define CLOGS true
+#else
+#define CLOGS false
+#endif
+
+
 #if defined(TRACKINGITSU_OPEN_CL_COMPILE)
 #define __CL_ENABLE_EXCEPTIONS //enable exceptions
 # define TRACKINGITSU_OCL_MODE true
@@ -31,6 +38,8 @@
 # define TRACKINGITSU_OCL_MODE false
 # define TRACKINGITSU_CUDA_MODE true
 #endif
+
+
 
 #if defined(__CUDACC__)
 # define TRACKINGITSU_GPU_COMPILING

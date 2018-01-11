@@ -134,14 +134,14 @@ void TrackerTraits<false>::computeLayerTracklets(PrimaryVertexContext& primaryVe
   }
   int totalTracklets=0;
   for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
-
+	  outFile <<"Layer " << iLayer<<"\n";
   	  int size=primaryVertexContext.getTracklets()[iLayer].size();
   	  totalTracklets+=size;
   	  for(int i=0;i<size;i++){
   		  int v=primaryVertexContext.getTrackletsLookupTable()[iLayer][i];
   			outFile << i << "\t"<<v<<"\n";
   	  }
-
+  	  outFile << "\n";
   }
   std::cout<<"Total tracklets found = "<<totalTracklets<<std::endl;
 
@@ -359,7 +359,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
 	      diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 	      std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 	//evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
-
+/*
 	      t1 = clock();
 	      computeTracklets();
 	      t2=clock();
@@ -372,7 +372,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
 
 	roads.emplace_back(mPrimaryVertexContext.getRoads());
 
-
+*/
   }
 
   return roads;
@@ -401,7 +401,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
 
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
-    evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
+/*    evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
     evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
     evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
     evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, "Computing Montecarlo Labels");
@@ -411,7 +411,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     std::cout << std::setw(2) << " - Vertex " << iVertex + 1 << " completed in: " << diff << "ms" << std::endl;
 
     roads.emplace_back(mPrimaryVertexContext.getRoads());
-  }
+ */ }
 
   return roads;
 }

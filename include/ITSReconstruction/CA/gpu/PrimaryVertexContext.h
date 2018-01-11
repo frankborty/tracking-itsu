@@ -88,6 +88,8 @@ class PrimaryVertexContext
 
      cl::Buffer bTrackletsFoundForLayer;
 
+     std::array<std::vector<Cluster>, Constants::ITS::LayersNumber> mClustersVector;
+
   };
 
 

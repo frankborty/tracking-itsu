@@ -12,6 +12,11 @@
 /// \brief
 ///
 
+#if 0
+#define PRINT_EXECUTION_TIME
+#endif
+
+
 #include <Context.h>
 #include <ITSReconstruction/CA/Cell.h>
 #include <ITSReconstruction/CA/Constants.h>
@@ -26,9 +31,11 @@
 
 #if TRACKINGITSU_OCL_MODE
 #include <CL/cl.hpp>
-#include <clogs/clogs.h>
-#include <clogs/scan.h>
 #include "ITSReconstruction/CA/gpu/myThresholds.h"
+	#if CLOGS
+	#include <clogs/clogs.h>
+	#include <clogs/scan.h>
+	#endif
 #endif
 
 #if TRACKINGITSU_CUDA_MODE
@@ -139,22 +146,20 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 
 
-
 /*
-		const char outputFileName[] = "../oclLookupTable-ocl.txt";
+		const char outputFileName[] = "../LookupTable-ocl.txt";
 		std::ofstream outFileLookUp;
 		outFileLookUp.open((const char*)outputFileName);
-
-
+*/
 		const char outputTrackletFileName[] = "../oclTrackletsFound.txt";
 		std::ofstream outFileTracklet;
 		outFileTracklet.open((const char*)outputTrackletFileName);
 
-*/
 
 		t1=clock();
 		for (int iLayer{ 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer) {
 			//tx=clock();
+
   			clustersNum=primaryVertexContext.openClPrimaryVertexContext.iClusterSize[iLayer];
 
 			oclCountKernel.setArg(0, primaryVertexContext.openClPrimaryVertexContext.bPrimaryVertex);
@@ -181,6 +186,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 				//cl::NullRange);
+
 /*
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
@@ -200,13 +206,14 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			//std::cout<< "\tLayer " << iLayer <<" time = "<<time<<" ms" <<"\tWG = " <<workgroupSize<<"\tclusterNr = "<<clustersNum<<"\tpseudoClusterNr = "<<pseudoClusterNumber<<std::endl;
 		}
 
-
+#ifdef PRINT_EXECUTION_TIME
 		t2 = clock();
 		float countTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 		std::cout<< "countTrack time " << countTrack <<" ms" << std::endl;
+#endif
 
+#if CLOGS
 		//scan
-		//std::cout<<"scan and sort"<<std::endl;
 		t1=clock();
 		for (int iLayer { 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer) {
 			//tx=clock();
@@ -233,7 +240,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				oclTestKernel.setArg(1, bTrackletLookUpTable);
 
 				int pseudoClusterNumber=clustersNum;
-				std::cout<<"ClustersNum = "<<clustersNum<<std::endl;
+				//std::cout<<"ClustersNum = "<<clustersNum<<std::endl;
 				if((clustersNum % workgroupSize)!=0){
 					int mult=clustersNum/workgroupSize;
 					pseudoClusterNumber=(mult+1)*workgroupSize;
@@ -242,10 +249,11 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 					oclTestKernel,
 					cl::NullRange,
 					//cl::NDRange(pseudoClusterNumber),
-					cl::NDRange(clustersNum),
+					cl::NDRange(clustersNum),	//se non funziona abilitare questa rigga e la successiva commentata
 					//cl::NDRange(workgroupSize));
-					cl::NullRange);
-
+					//cl::NullRange);
+*/
+/*
 				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 						bTrackletLookUpTable,
 						CL_TRUE, // block
@@ -253,11 +261,12 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 						0,
 						clustersNum*sizeof(int)
 				);
-				outFileLookUp<<"Pippo"<<"\n";
+				outFileLookUp<<"Layer "<<iLayer<<"\n";
+				//std::cout<<clustersNum<<std::endl;
 				for(int j=0;j<clustersNum;j++)
 					outFileLookUp<<j<<"\t"<<lookUpFound[j]<<"\n";
+				outFileLookUp<<"\n";
 */
-
 			}
 			else{
 				clogs::ScanProblem problem;
@@ -280,7 +289,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 					cl::NullRange,
 					cl::NDRange(pseudoClusterNumber),
 					cl::NDRange(workgroupSize));
-
+*//*
 				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 						primaryVertexContext.openClPrimaryVertexContext.bTrackletsLookupTable[iLayer-1],
 						CL_TRUE, // block
@@ -288,9 +297,10 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 						0,
 						clustersNum*sizeof(int)
 				);
-
+				outFileLookUp<<"Layer "<<iLayer<<"\n";
 				for(int j=0;j<clustersNum;j++)
 					outFileLookUp<<j<<"\t"<<lookUpFound[j]<<"\n";
+				outFileLookUp<<"\n";
 */
 			}
 			//ty=clock();
@@ -298,10 +308,15 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			//std::cout<< "\t " << iLayer <<" time = "<<time<<" ms" << std::endl;
 		}
 		//std::cout<<"finish sort"<<std::endl;
+#ifdef PRINT_EXECUTION_TIME
 		t2 = clock();
 		float scanTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 		std::cout<< "scanTrack time " << scanTrack <<" ms" << std::endl;
-
+#endif
+#else
+		std::cout<<"Error during tracklets founding (Clogs not included)"<<std::endl;
+		return;
+#endif
 		//calcolo le tracklet
 		//std::cout<<"calcolo le tracklet"<<std::endl;
 		t1=clock();
@@ -331,7 +346,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				pseudoClusterNumber=(mult+1)*workgroupSize;
 			}
 
-			try{
+
 			oclCommandqueues[iLayer].enqueueNDRangeKernel(
 					oclComputeKernel,
 					cl::NullRange,
@@ -339,11 +354,6 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 					cl::NDRange(workgroupSize));
 
 
-			}catch(const cl::Error &err){
-						std::string errString=GPU::Utils::OCLErr_code(err.err());
-						std::cout<< errString << std::endl;
-						throw std::runtime_error { errString };
-			}
 
 /*
 			TrackletStruct* output = (TrackletStruct *) oclCommandqueues[iLayer].enqueueMapBuffer(
@@ -356,8 +366,8 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 			for(int i=0;i<trackletsFound[iLayer];i++)
 				outFileTracklet<<output[i].firstClusterIndex<<"\t"<<output[i].secondClusterIndex<<"\t"<<output[i].phiCoordinate<<"\t"<<output[i].tanLambda<<"\n";
-
-
+*/
+/*
 			for(int i=0;i<trackletsFound[iLayer];i++)
 				//outFileTracklet<<"["<<i<<"] "<<output[i].firstClusterIndex<<"\t"<<output[i].secondClusterIndex<<"\t"<<output[i].phiCoordinate<<"\t"<<output[i].tanLambda<<"\n";
 				outFileTracklet<<std::setprecision(6)<<output[i].firstClusterIndex<<"\t"<<output[i].secondClusterIndex<<"\t"<<output[i].phiCoordinate<<"\t"<<output[i].tanLambda<<"\n";
@@ -367,11 +377,17 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			//float time = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			//std::cout<< "\tLayer " << iLayer <<" time = "<<time<<" ms" <<"\tWG = " <<workgroupSize<<std::endl;
 		}
-		//std::cout<<"finish trackletsFinding"<<std::endl;
+/*		for (int iLayer{ 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer)
+			oclCommandqueues[iLayer].finish();
+			//std::cout<<"finish trackletsFinding"<<std::endl;
+			 *
+			 */
+#ifdef PRINT_EXECUTION_TIME
 		t2 = clock();
 		float findTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 		std::cout<< "findTrack time " << findTrack <<" ms" << std::endl;
 		std::cout<<"Total tracklets found = "<<totalTrackletsFound<<std::endl;
+#endif
 	}
 	catch(const cl::Error &err){
 			std::string errString=GPU::Utils::OCLErr_code(err.err());

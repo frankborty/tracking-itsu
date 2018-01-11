@@ -85,7 +85,6 @@ class Context final
     Context& operator=(const Context&);
 
     const DeviceProperties& getDeviceProperties();
-    const DeviceProperties& getCPUDeviceProperties();
     const DeviceProperties& getDeviceProperties(const int);
 
 
@@ -95,7 +94,6 @@ class Context final
 
 #if TRACKINGITSU_OCL_MODE
     int iCurrentDevice;
-    int iCurrentCPUDevice;
 #endif
     int mDevicesNum;
     std::vector<DeviceProperties> mDeviceProperties;

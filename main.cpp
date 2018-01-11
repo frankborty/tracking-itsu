@@ -63,7 +63,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   }
 
   std::vector<std::unordered_map<int, Label>> labelsMap;
-  bool createBenchmarkData = false;
+//  bool createBenchmarkData = false;
   std::ofstream correctRoadsOutputStream;
   std::ofstream duplicateRoadsOutputStream;
   std::ofstream fakeRoadsOutputStream;
@@ -72,7 +72,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
     verticesNum += events[iEvent].getPrimaryVerticesNum();
   }
 
-
+/*
   if (argv[2] != NULL) {
 
     std::string labelsFileName(argv[2]);
@@ -84,7 +84,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
     duplicateRoadsOutputStream.open(benchmarkFolderName + "DuplicateRoads.txt");
     fakeRoadsOutputStream.open(benchmarkFolderName + "FakeRoads.txt");
   }
-
+*/
 
   clock_t t1, t2;
   float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;

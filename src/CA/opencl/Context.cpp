@@ -169,7 +169,7 @@ Context::Context()
 	}
 
 	iCurrentDevice=1;
-	iCurrentCPUDevice=0;
+
 	//std::cout << std::endl<< ">> First device is selected" << std::endl;
 	//create command queue associated to selected device
 	try{
@@ -196,10 +196,7 @@ const DeviceProperties& Context::getDeviceProperties()
   return getDeviceProperties(iCurrentDevice);
 }
 
-const DeviceProperties& Context::getCPUDeviceProperties()
-{
-  return getDeviceProperties(iCurrentCPUDevice);
-}
+
 
 const DeviceProperties& Context::getDeviceProperties(const int deviceIndex)
 {
