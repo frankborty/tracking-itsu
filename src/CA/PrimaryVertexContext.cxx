@@ -90,40 +90,54 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 				free(openClPrimaryVertexContext.mClusters[iLayer]);
 
 			//check if size of clusters is multiple of page size, otherwise extend clusters with 0 value
-			int factor;
+
 			int clusterSize=clustersNum*sizeof(ClusterStruct);
-		/*	factor=clusterSize%64;
-			if(factor!=0){
-				factor++;
-				clusterSize+=clusterSize;
-			}
-			//openClPrimaryVertexContext.mClusters[iLayer]=(ClusterStruct*)aligned_alloc(4096,clusterSize);
-	/*
-			int res=posix_memalign((void**)&openClPrimaryVertexContext.mClusters[iLayer],4096,clusterSize);
-			if(res!=0){
-				std::cout<<"layer = "<<iLayer<<"\t clusters = "<<res<<std::endl;
-			}
-	*/
+
 			openClPrimaryVertexContext.mClusters[iLayer]=(ClusterStruct*)malloc(clustersNum*sizeof(ClusterStruct));
 			openClPrimaryVertexContext.iClusterSize[iLayer]=clustersNum*sizeof(ClusterStruct);
 			openClPrimaryVertexContext.iClusterAllocatedSize[iLayer]=clusterSize;
-
+#if 1
 			for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
 				const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
 				openClPrimaryVertexContext.addClusters(mPrimaryVertex,currentCluster,iLayer,iCluster);
 
 			}
 			openClPrimaryVertexContext.iClusterSize[iLayer]=clustersNum;
-
 			openClPrimaryVertexContext.sortClusters(iLayer);
+
+			openClPrimaryVertexContext.bClusters[iLayer]=cl::Buffer(
+				oclContext,
+				(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+				clusterSize,
+				(void *) &(openClPrimaryVertexContext.mClusters[iLayer][0]));
+
+#else
+
+			mClusters[iLayer].clear();
+
+			if(clustersNum > (int)mClusters[iLayer].capacity()) {
+				mClusters[iLayer].reserve(clustersNum);
+			}
+			for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
+			  const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
+			  mClusters[iLayer].emplace_back(iLayer, event.getPrimaryVertex(primaryVertexIndex), currentCluster);
+			}
+			std::sort(mClusters[iLayer].begin(), mClusters[iLayer].end(), [](Cluster& cluster1, Cluster& cluster2) {
+			      return cluster1.indexTableBinIndex < cluster2.indexTableBinIndex;
+			    });
+
+			openClPrimaryVertexContext.iClusterSize[iLayer]=clustersNum;
+
 
 			openClPrimaryVertexContext.bClusters[iLayer]=cl::Buffer(
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					clusterSize,
-					(void *) &(openClPrimaryVertexContext.mClusters[iLayer][0]));
-
+					(void *) &(mClusters[iLayer]));
+#endif
 		}
+
+
 		for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {
 			const int clustersNum = static_cast<int>(openClPrimaryVertexContext.iClusterSize[iLayer]);
 
