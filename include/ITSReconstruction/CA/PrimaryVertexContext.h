@@ -34,7 +34,7 @@
 
 #if TRACKINGITSU_OCL_MODE
 #include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
-#include "CL/cl.hpp"
+//#include "CL/cl.hpp"
 #endif
 
 

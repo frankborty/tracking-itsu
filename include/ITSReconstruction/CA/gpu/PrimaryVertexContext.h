@@ -24,7 +24,7 @@
 #include "ITSReconstruction/CA/gpu/Vector.h"
 #include "ITSReconstruction/CA/IndexTableUtils.h"
 #ifdef TRACKINGITSU_OCL_MODE
-#include <CL/cl.hpp>
+//#include <CL/cl.hpp>
 #include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
 #endif
 
@@ -88,7 +88,21 @@ class PrimaryVertexContext
 
      cl::Buffer bTrackletsFoundForLayer;
 
-     std::array<std::vector<Cluster>, Constants::ITS::LayersNumber> mClustersVector;
+     //std::array<std::vector<Cluster>, Constants::ITS::LayersNumber> mClustersVector;
+
+     ////// cells //////
+     CellStruct* mCells[Constants::ITS::CellsPerRoad];
+     cl::Buffer bCells[Constants::ITS::CellsPerRoad];
+     int iCellSize[Constants::ITS::CellsPerRoad];
+     //int iTrackletAllocatedSize[Constants::ITS::TrackletsPerRoad];
+     cl::Buffer bCellSize;
+
+     int *mCellsLookupTable[Constants::ITS::CellsPerRoad-1];
+     cl::Buffer bCellsLookupTable[Constants::ITS::CellsPerRoad-1];
+	 int iCellsLookupTableSize[Constants::ITS::TrackletsPerRoad-1];
+	 cl::Buffer bCellsLookupTableSize;
+
+	 int *mCellsNeighbours[Constants::ITS::CellsPerRoad - 1];
 
   };
 

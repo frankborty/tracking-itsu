@@ -168,12 +168,18 @@ Context::Context()
 		throw std::runtime_error { errString };
 	}
 
-	iCurrentDevice=1;
+	iCurrentDevice=0;
+
+
+
 
 	//std::cout << std::endl<< ">> First device is selected" << std::endl;
 	//create command queue associated to selected device
 	try{
 		mDeviceProperties[iCurrentDevice].oclQueue=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE|CL_QUEUE_PROFILING_ENABLE );
+		mDeviceProperties[iCurrentDevice].oclCountKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
+		mDeviceProperties[iCurrentDevice].oclComputeKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
+		mDeviceProperties[iCurrentDevice].oclTestKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerTracklets.cl","openClScan");
 	}catch(const cl::Error &err){
 			std::string errString=Utils::OCLErr_code(err.err());
 			//std::cout<< errString << std::endl;

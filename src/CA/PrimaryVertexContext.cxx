@@ -135,6 +135,49 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					clusterSize,
 					(void *) &(mClusters[iLayer]));
 #endif
+
+			//// cells
+			if(iLayer < Constants::ITS::CellsPerRoad) {
+				if(openClPrimaryVertexContext.mCells[iLayer]!=NULL)
+					free(openClPrimaryVertexContext.mCells[iLayer]);
+
+				float cellsMemorySize = std::ceil(((Constants::Memory::CellsMemoryCoefficients[iLayer] * event.getLayer(iLayer).getClustersSize())
+				 * event.getLayer(iLayer + 1).getClustersSize()) * event.getLayer(iLayer + 2).getClustersSize());
+
+
+				int cellSize=cellsMemorySize*sizeof(CellStruct);
+				openClPrimaryVertexContext.iCellSize[iLayer]=cellsMemorySize;
+				openClPrimaryVertexContext.mCells[iLayer]=(CellStruct*)malloc(cellSize);//delete
+				openClPrimaryVertexContext.bCells[iLayer]=cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+					cellSize,
+					(void *) &(openClPrimaryVertexContext.mCells[iLayer][0]));
+
+			}
+
+			if(iLayer < Constants::ITS::CellsPerRoad - 1) {
+				//mCellsLookupTable[iLayer].clear();
+				if(openClPrimaryVertexContext.mCellsLookupTable[iLayer]!=NULL)
+					free(openClPrimaryVertexContext.mCellsLookupTable[iLayer]);
+
+				float cellsLookupTableMemorySize=std::ceil((Constants::Memory::TrackletsMemoryCoefficients[iLayer + 1] * event.getLayer(iLayer + 1).getClustersSize())
+				* event.getLayer(iLayer + 2).getClustersSize());
+
+				int CellsLookupTableSize=cellsLookupTableMemorySize*sizeof(int);
+				openClPrimaryVertexContext.iCellsLookupTableSize[iLayer]=cellsLookupTableMemorySize;
+				openClPrimaryVertexContext.mCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize);
+
+				openClPrimaryVertexContext.bCellsLookupTable[iLayer]=cl::Buffer(
+					oclContext,
+					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+					CellsLookupTableSize,
+					(void *) &(openClPrimaryVertexContext.mCellsLookupTable[iLayer][0]));
+
+				if(openClPrimaryVertexContext.mCellsNeighbours[iLayer]!=NULL)
+					free(openClPrimaryVertexContext.mCellsNeighbours[iLayer]);
+
+			}
 		}
 
 

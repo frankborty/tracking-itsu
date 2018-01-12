@@ -41,7 +41,7 @@
 #include "ITSReconstruction/CA/gpu/Context.h"
 #include "ITSReconstruction/CA/gpu/Utils.h"
 #define __CL_ENABLE_EXCEPTIONS //enable exceptions
-#include "CL/cl.hpp"
+//#include "CL/cl.hpp"
 #endif
 
 namespace o2
@@ -275,7 +275,7 @@ Tracker<IsGPU>::Tracker()
 template<bool IsGPU>
 std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& event)
 {
-  std::cout<<"clustersToTracks"<<std::endl;
+  //std::cout<<"clustersToTracks"<<std::endl;
   const int verticesNum { event.getPrimaryVerticesNum() };
   std::vector<std::vector<Road>> roads { };
   roads.reserve(verticesNum);
@@ -384,7 +384,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
   const int verticesNum { event.getPrimaryVerticesNum() };
   std::vector<std::vector<Road>> roads { };
   roads.reserve(verticesNum);
-  std::cout<<"clustersToTracksVerbose"<<std::endl;
+  //std::cout<<"clustersToTracksVerbose"<<std::endl;
 
   for (int iVertex { 0 }; iVertex < verticesNum; ++iVertex) {
 
@@ -401,8 +401,8 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
 
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
-/*    evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
-    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
+ //   evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
+/*    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
     evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
     evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, "Computing Montecarlo Labels");
 

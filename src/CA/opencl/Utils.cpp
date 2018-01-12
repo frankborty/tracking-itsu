@@ -21,7 +21,7 @@
 #include<fstream>
 
 #define __CL_ENABLE_EXCEPTIONS //abilita le eccezioni
-#include <CL/cl.hpp>
+//#include <CL/cl.hpp>
 #include "ITSReconstruction/CA/gpu/Context.h"
 #include <unistd.h>
 #include "myThresholds.h"

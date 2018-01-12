@@ -20,7 +20,7 @@
 
 
 #if TRACKINGITSU_OCL_MODE
-#include <CL/cl.hpp>
+//#include <CL/cl.hpp>
 #endif
 
 namespace o2

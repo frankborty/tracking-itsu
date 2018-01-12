@@ -30,7 +30,7 @@
 #include <string>
 
 #if TRACKINGITSU_OCL_MODE
-#include <CL/cl.hpp>
+//#include <CL/cl.hpp>
 #include "ITSReconstruction/CA/gpu/myThresholds.h"
 	#if CLOGS
 	#include <clogs/clogs.h>
@@ -97,7 +97,7 @@ void sortCellsKernel(PrimaryVertexContext& primaryVertexContext, const int layer
 template<>
 void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primaryVertexContext)
 {
-	std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
+	//std::cout << "OCL_Tracker:computeLayerTracklets"<< std::endl;
 	cl::CommandQueue oclCommandqueues[6];
 	cl::CommandQueue oclCPUCommandqueues[6];
 	cl::Buffer bLayerID;
@@ -105,11 +105,12 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 	cl::CommandQueue oclCommandQueue;
 	int *firstLayerLookUpTable;
 	int clustersNum;
-	time_t t1,t2;
+	time_t t1;
+	//time_t t2;
 	//time_t tx,ty;
-	int* trackletsFound;
+	//int* trackletsFound;
 	int workgroupSize=5*32;
-	int totalTrackletsFound=0;
+	//int totalTrackletsFound=0;
 	try{
 
 		cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
@@ -121,12 +122,13 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 		std::cout<< "Device: "<<deviceName<<std::endl;
 
 		//must be move to oclContext create
-		cl::Kernel oclCountKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
+/*		cl::Kernel oclCountKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
 		cl::Kernel oclComputeKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
-
-		//
 		cl::Kernel oclTestKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","openClScan");
 		//
+*/		cl::Kernel oclCountKernel=GPU::Context::getInstance().getDeviceProperties().oclCountKernel;
+		cl::Kernel oclComputeKernel=GPU::Context::getInstance().getDeviceProperties().oclComputeKernel;
+		cl::Kernel oclTestKernel=GPU::Context::getInstance().getDeviceProperties().oclTestKernel;
 
 		//int warpSize=GPU::Context::getInstance().getDeviceProperties().warpSize;
 
@@ -180,13 +182,16 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				pseudoClusterNumber=(mult+1)*workgroupSize;
 			}
 
+			time_t tx=clock();
 			oclCommandqueues[iLayer].enqueueNDRangeKernel(
 				oclCountKernel,
 				cl::NullRange,
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 				//cl::NullRange);
-
+			time_t ty=clock();
+			float countTrack = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
+			std::cout<< "["<<iLayer<<"]countTrack time " << countTrack <<" ms" << std::endl;
 /*
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
@@ -317,6 +322,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 		std::cout<<"Error during tracklets founding (Clogs not included)"<<std::endl;
 		return;
 #endif
+
 		//calcolo le tracklet
 		//std::cout<<"calcolo le tracklet"<<std::endl;
 		t1=clock();
@@ -410,107 +416,67 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 template<>
 void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVertexContext)
 {
-//  std::array<size_t, Constants::ITS::CellsPerRoad - 1> tempSize;
-//  std::array<int, Constants::ITS::CellsPerRoad - 1> trackletsNum;
-//  std::array<int, Constants::ITS::CellsPerRoad - 1> cellsNum;
-//  std::array<GPU::Stream, Constants::ITS::CellsPerRoad> streamArray;
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad - 1; ++iLayer) {
-//
-//    tempSize[iLayer] = 0;
-//    trackletsNum[iLayer] = primaryVertexContext.getDeviceTracklets()[iLayer + 1].getSizeFromDevice();
-//    const int cellsNum { static_cast<int>(primaryVertexContext.getDeviceCells()[iLayer + 1].capacity()) };
-//    primaryVertexContext.getTempCellArray()[iLayer].reset(cellsNum);
-//
-//    cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],
-//        primaryVertexContext.getDeviceCellsPerTrackletTable()[iLayer].get(),
-//        primaryVertexContext.getDeviceCellsLookupTable()[iLayer].get(), trackletsNum[iLayer]);
-//
-//    primaryVertexContext.getTempTableArray()[iLayer].reset(static_cast<int>(tempSize[iLayer]));
-//  }
-//
-//  cudaDeviceSynchronize();
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-//
-//    const GPU::DeviceProperties& deviceProperties = GPU::Context::getInstance().getDeviceProperties();
-//    const int trackletsSize = primaryVertexContext.getDeviceTracklets()[iLayer].getSizeFromDevice();
-//    dim3 threadsPerBlock { GPU::Utils::Host::getBlockSize(trackletsSize) };
-//    dim3 blocksGrid { GPU::Utils::Host::getBlocksGrid(threadsPerBlock, trackletsSize) };
-//
-//    if(iLayer == 0) {
-//
-//      GPU::layerCellsKernel<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(primaryVertexContext.getDeviceContext(),
-//          iLayer, primaryVertexContext.getDeviceCells()[iLayer].getWeakCopy());
-//
-//    } else {
-//
-//      GPU::layerCellsKernel<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer].get() >>>(primaryVertexContext.getDeviceContext(),
-//          iLayer, primaryVertexContext.getTempCellArray()[iLayer - 1].getWeakCopy());
-//    }
-//
-//    cudaError_t error = cudaGetLastError();
-//
-//    if (error != cudaSuccess) {
-//
-//      std::ostringstream errorString { };
-//      errorString << "CUDA API returned error [" << cudaGetErrorString(error) << "] (code " << error << ")"
-//          << std::endl;
-//
-//      throw std::runtime_error { errorString.str() };
-//    }
-//  }
-//
-//  cudaDeviceSynchronize();
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad - 1; ++iLayer) {
-//
-//    cellsNum[iLayer] = primaryVertexContext.getTempCellArray()[iLayer].getSizeFromDevice();
-//    primaryVertexContext.getDeviceCells()[iLayer + 1].resize(cellsNum[iLayer]);
-//
-//    cub::DeviceScan::ExclusiveSum(static_cast<void *>(primaryVertexContext.getTempTableArray()[iLayer].get()), tempSize[iLayer],
-//        primaryVertexContext.getDeviceCellsPerTrackletTable()[iLayer].get(),
-//        primaryVertexContext.getDeviceCellsLookupTable()[iLayer].get(), trackletsNum[iLayer],
-//        streamArray[iLayer + 1].get());
-//
-//    dim3 threadsPerBlock { GPU::Utils::Host::getBlockSize(trackletsNum[iLayer]) };
-//    dim3 blocksGrid { GPU::Utils::Host::getBlocksGrid(threadsPerBlock, trackletsNum[iLayer]) };
-//
-//    GPU::sortCellsKernel<<< blocksGrid, threadsPerBlock, 0, streamArray[iLayer + 1].get() >>>(primaryVertexContext.getDeviceContext(),
-//        iLayer + 1, primaryVertexContext.getTempCellArray()[iLayer].getWeakCopy());
-//
-//    cudaError_t error = cudaGetLastError();
-//
-//    if (error != cudaSuccess) {
-//
-//      std::ostringstream errorString { };
-//      errorString << "CUDA API returned error [" << cudaGetErrorString(error) << "] (code " << error << ")"
-//          << std::endl;
-//
-//      throw std::runtime_error { errorString.str() };
-//    }
-//  }
-//
-//  cudaDeviceSynchronize();
-//
-//  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
-//
-//    int cellsSize;
-//
-//    if (iLayer == 0) {
-//
-//      cellsSize = primaryVertexContext.getDeviceCells()[iLayer].getSizeFromDevice();
-//
-//    } else {
-//
-//      cellsSize = cellsNum[iLayer - 1];
-//
-//      primaryVertexContext.getDeviceCellsLookupTable()[iLayer - 1].copyIntoVector(
-//          primaryVertexContext.getCellsLookupTable()[iLayer - 1], trackletsNum[iLayer - 1]);
-//    }
-//
-//    primaryVertexContext.getDeviceCells()[iLayer].copyIntoVector(primaryVertexContext.getCells()[iLayer], cellsSize);
-//  }
+	//std::array<size_t, Constants::ITS::CellsPerRoad - 1> tempSize;
+	//std::array<int, Constants::ITS::CellsPerRoad - 1> trackletsNum;
+	//std::array<int, Constants::ITS::CellsPerRoad - 1> cellsNum;
+	//int iTrackletSize[Constants::ITS::TrackletsPerRoad];
+	cl::CommandQueue oclCommandqueues[Constants::ITS::CellsPerRoad];
+	cl::Buffer bLayerID;
+	cl::Buffer bTrackletLookUpTable;
+	cl::CommandQueue oclCommandQueue;
+	//int *firstLayerLookUpTable;
+	//int clustersNum;
+	//time_t t1,t2;
+	//int workgroupSize=5*32;
+
+	try{
+  		cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
+  		cl::Device oclDevice=GPU::Context::getInstance().getDeviceProperties().oclDevice;
+  		cl::CommandQueue oclCommandQueue=GPU::Context::getInstance().getDeviceProperties().oclQueue;
+
+  		std::string deviceName;
+  		oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
+  		std::cout<< "Device: "<<deviceName<<std::endl;
+
+  		//must be move to oclContext create
+  		cl::Kernel oclCountKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
+  		cl::Kernel oclComputeKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
+
+//  	cl::Kernel oclTestKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","openClScan");
+
+  		for(int i=0;i<Constants::ITS::CellsPerRoad;i++){
+  			oclCommandqueues[i]=cl::CommandQueue(oclContext, oclDevice, 0);
+  		}
+
+  		int *iTrackletSize = (int *) oclCommandqueues[0].enqueueMapBuffer(
+				primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				6*sizeof(int)
+		);
+  		memcpy(primaryVertexContext.openClPrimaryVertexContext.iClusterSize,iTrackletSize,6*sizeof(int));
+
+  		//compute the number of cells for each layer
+    	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
+    		//const int trackletSize=iTrackletSize[iLayer]+1;
+
+    		if(iLayer==0){
+
+    		}
+    		else{
+
+    		}
+  		}
+
+    	//scan for cells lookup table
+
+    	//compute cells
+
+  	}catch (...) {
+		std::cout<<"Exception during compute cells phase"<<std::endl;
+		throw std::runtime_error { "Exception during compute cells phase" };
+	}
 }
 
 }

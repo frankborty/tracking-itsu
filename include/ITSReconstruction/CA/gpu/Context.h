@@ -30,7 +30,7 @@
 	#include <limits>
 	#include <fstream>
 	#include <vector>
-	#include<CL/cl.hpp>
+	//#include <CL/cl.hpp>
 #endif
 
 namespace o2
@@ -72,6 +72,11 @@ struct DeviceProperties final
     cl::Device oclDevice;
     cl::Device oclCpuDevice;
     cl::CommandQueue oclQueue;
+
+    //kernel
+    cl::Kernel oclCountKernel;
+    cl::Kernel oclComputeKernel;
+    cl::Kernel oclTestKernel;
 
 #endif
 };
