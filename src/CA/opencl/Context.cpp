@@ -168,7 +168,7 @@ Context::Context()
 		throw std::runtime_error { errString };
 	}
 
-	iCurrentDevice=0;
+	iCurrentDevice=1;
 
 
 

@@ -43,7 +43,8 @@ class Cell
       const float3& getNormalVectorCoordinates() const;
       void setLevel(const int level);
 
-    private:
+  //  private:
+    public:
       const int mFirstClusterIndex;
       const int mSecondClusterIndex;
       const int mThirdClusterIndex;

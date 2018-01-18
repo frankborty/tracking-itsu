@@ -96,7 +96,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 			openClPrimaryVertexContext.mClusters[iLayer]=(ClusterStruct*)malloc(clustersNum*sizeof(ClusterStruct));
 			openClPrimaryVertexContext.iClusterSize[iLayer]=clustersNum*sizeof(ClusterStruct);
 			openClPrimaryVertexContext.iClusterAllocatedSize[iLayer]=clusterSize;
-#if 1
+
 			for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
 				const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
 				openClPrimaryVertexContext.addClusters(mPrimaryVertex,currentCluster,iLayer,iCluster);
@@ -111,30 +111,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 				clusterSize,
 				(void *) &(openClPrimaryVertexContext.mClusters[iLayer][0]));
 
-#else
 
-			mClusters[iLayer].clear();
-
-			if(clustersNum > (int)mClusters[iLayer].capacity()) {
-				mClusters[iLayer].reserve(clustersNum);
-			}
-			for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
-			  const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
-			  mClusters[iLayer].emplace_back(iLayer, event.getPrimaryVertex(primaryVertexIndex), currentCluster);
-			}
-			std::sort(mClusters[iLayer].begin(), mClusters[iLayer].end(), [](Cluster& cluster1, Cluster& cluster2) {
-			      return cluster1.indexTableBinIndex < cluster2.indexTableBinIndex;
-			    });
-
-			openClPrimaryVertexContext.iClusterSize[iLayer]=clustersNum;
-
-
-			openClPrimaryVertexContext.bClusters[iLayer]=cl::Buffer(
-					oclContext,
-					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-					clusterSize,
-					(void *) &(mClusters[iLayer]));
-#endif
 
 			//// cells
 			if(iLayer < Constants::ITS::CellsPerRoad) {
@@ -158,21 +135,21 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 
 			if(iLayer < Constants::ITS::CellsPerRoad - 1) {
 				//mCellsLookupTable[iLayer].clear();
-				if(openClPrimaryVertexContext.mCellsLookupTable[iLayer]!=NULL)
-					free(openClPrimaryVertexContext.mCellsLookupTable[iLayer]);
+				if(openClPrimaryVertexContext.iCellsLookupTable[iLayer]!=NULL)
+					free(openClPrimaryVertexContext.iCellsLookupTable[iLayer]);
 
 				float cellsLookupTableMemorySize=std::ceil((Constants::Memory::TrackletsMemoryCoefficients[iLayer + 1] * event.getLayer(iLayer + 1).getClustersSize())
 				* event.getLayer(iLayer + 2).getClustersSize());
 
 				int CellsLookupTableSize=cellsLookupTableMemorySize*sizeof(int);
 				openClPrimaryVertexContext.iCellsLookupTableSize[iLayer]=cellsLookupTableMemorySize;
-				openClPrimaryVertexContext.mCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize);
+				openClPrimaryVertexContext.iCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize);
 
 				openClPrimaryVertexContext.bCellsLookupTable[iLayer]=cl::Buffer(
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					CellsLookupTableSize,
-					(void *) &(openClPrimaryVertexContext.mCellsLookupTable[iLayer][0]));
+					(void *) &(openClPrimaryVertexContext.iCellsLookupTable[iLayer][0]));
 
 				if(openClPrimaryVertexContext.mCellsNeighbours[iLayer]!=NULL)
 					free(openClPrimaryVertexContext.mCellsNeighbours[iLayer]);

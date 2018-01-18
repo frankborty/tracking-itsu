@@ -85,8 +85,10 @@ class PrimaryVertexContext
 
 
      int* mTrackletsPerClusterTable[Constants::ITS::CellsPerRoad];
-
      cl::Buffer bTrackletsFoundForLayer;
+     cl::Buffer bCellsFoundForLayer;
+     int* iCellsPerTrackletTable[Constants::ITS::CellsPerRoad];
+     cl::Buffer bCellsFoundForTracklet;
 
      //std::array<std::vector<Cluster>, Constants::ITS::LayersNumber> mClustersVector;
 
@@ -97,7 +99,7 @@ class PrimaryVertexContext
      //int iTrackletAllocatedSize[Constants::ITS::TrackletsPerRoad];
      cl::Buffer bCellSize;
 
-     int *mCellsLookupTable[Constants::ITS::CellsPerRoad-1];
+     int *iCellsLookupTable[Constants::ITS::CellsPerRoad-1];
      cl::Buffer bCellsLookupTable[Constants::ITS::CellsPerRoad-1];
 	 int iCellsLookupTableSize[Constants::ITS::TrackletsPerRoad-1];
 	 cl::Buffer bCellsLookupTableSize;

@@ -134,14 +134,9 @@ void TrackerTraits<false>::computeLayerTracklets(PrimaryVertexContext& primaryVe
   }
   int totalTracklets=0;
   for (int iLayer { 0 }; iLayer < Constants::ITS::TrackletsPerRoad; ++iLayer) {
-	  outFile <<"Layer " << iLayer<<"\n";
   	  int size=primaryVertexContext.getTracklets()[iLayer].size();
   	  totalTracklets+=size;
-  	  for(int i=0;i<size;i++){
-  		  int v=primaryVertexContext.getTrackletsLookupTable()[iLayer][i];
-  			outFile << i << "\t"<<v<<"\n";
-  	  }
-  	  outFile << "\n";
+
   }
   std::cout<<"Total tracklets found = "<<totalTracklets<<std::endl;
 
@@ -150,6 +145,9 @@ void TrackerTraits<false>::computeLayerTracklets(PrimaryVertexContext& primaryVe
 template<>
 void TrackerTraits<false>::computeLayerCells(PrimaryVertexContext& primaryVertexContext)
 {
+	const char outputFileName[] = "CellsFound-cpu.txt";
+	std::ofstream outFile;
+	outFile.open((const char*)outputFileName);
   for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
 
     if (primaryVertexContext.getTracklets()[iLayer + 1].empty()
@@ -385,6 +383,10 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
   std::vector<std::vector<Road>> roads { };
   roads.reserve(verticesNum);
   //std::cout<<"clustersToTracksVerbose"<<std::endl;
+  const char outputFileName[] = "CellsFound-cpu.txt";
+  std::ofstream outFile;
+  outFile.open((const char*)outputFileName);
+
 
   for (int iVertex { 0 }; iVertex < verticesNum; ++iVertex) {
 
@@ -398,10 +400,27 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
     std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 
-
+#if 0
+    const char outputFileName[] = "../Initialization_time.txt";
+	std::ofstream outFile1;
+	outFile1.open((const char*)outputFileName,std::ofstream::out | std::ofstream::app);
+	outFile1 <<  diff << "\n";
+#endif
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
- //   evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
+  //  evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
+#if 0
+    outFile<<"FirstTrackletIndex\tSecondTrackletIndex\tCurvature\tmLevel\tFirstClusterIndex\tSecondTrackletIndex\tThirdClusterIndex"<<"\n";
+    //print cells found
+    for(int iLayer=0;iLayer<o2::ITS::CA::Constants::ITS::CellsPerRoad;iLayer++){
+    	int cellNumber=mPrimaryVertexContext.getCells()[iLayer].size();
+    	outFile<<"Cell found starting from layer #"<<iLayer<<"\ttotal:"<<cellNumber<<"\n";
+    	for(int j=0;j<cellNumber;j++){
+    		Cell c=mPrimaryVertexContext.getCells()[iLayer][j];
+    		outFile<<c.mFirstTrackletIndex<<"\t"<<c.mSecondTrackletIndex<<"\t"<<c.mCurvature<<"\t"<<c.mLevel<<"\t"<<c.mFirstClusterIndex<<"\t"<<c.mSecondClusterIndex<<"\t"<<c.mThirdClusterIndex<<"\n";
+    	}
+    }
+#endif
 /*    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
     evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
     evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, "Computing Montecarlo Labels");
@@ -791,6 +810,14 @@ void Tracker<IsGPU>::evaluateTask(void (Tracker<IsGPU>::*task)(void), const char
   } else {
 
     ostream << std::setw(2) << " - " << taskName << " completed in: " << diff << "ms" << std::endl;
+//print to file
+#if 0
+    const char outputFileName[] = "../trackletFinding_time.txt";
+	std::ofstream outFile2;
+	outFile2.open((const char*)outputFileName,std::ofstream::out | std::ofstream::app);
+	outFile2 << diff<< "\n";
+#endif
+
   }
 }
 
