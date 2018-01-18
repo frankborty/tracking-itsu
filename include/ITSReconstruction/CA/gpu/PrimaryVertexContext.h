@@ -101,7 +101,7 @@ class PrimaryVertexContext
 
      int *iCellsLookupTable[Constants::ITS::CellsPerRoad-1];
      cl::Buffer bCellsLookupTable[Constants::ITS::CellsPerRoad-1];
-	 int iCellsLookupTableSize[Constants::ITS::TrackletsPerRoad-1];
+	 int iCellsLookupTableSize[Constants::ITS::CellsPerRoad-1];
 	 cl::Buffer bCellsLookupTableSize;
 
 	 int *mCellsNeighbours[Constants::ITS::CellsPerRoad - 1];

@@ -109,7 +109,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 				oclContext,
 				(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 				clusterSize,
-				(void *) &(openClPrimaryVertexContext.mClusters[iLayer][0]));
+				(void *) openClPrimaryVertexContext.mClusters[iLayer]);
 
 
 
@@ -129,7 +129,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					cellSize,
-					(void *) &(openClPrimaryVertexContext.mCells[iLayer][0]));
+					(void *) openClPrimaryVertexContext.mCells[iLayer]);
 
 			}
 
@@ -149,7 +149,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					CellsLookupTableSize,
-					(void *) &(openClPrimaryVertexContext.iCellsLookupTable[iLayer][0]));
+					(void *) openClPrimaryVertexContext.iCellsLookupTable[iLayer]);
 
 				if(openClPrimaryVertexContext.mCellsNeighbours[iLayer]!=NULL)
 					free(openClPrimaryVertexContext.mCellsNeighbours[iLayer]);
@@ -185,7 +185,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					openClPrimaryVertexContext.iIndexTableSize*sizeof(int),
-					(void *) &(openClPrimaryVertexContext.mIndexTables[iLayer-1][0]));
+					(void *) openClPrimaryVertexContext.mIndexTables[iLayer-1]);
 
 
 		    }
@@ -213,7 +213,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					trackletSize,
-					(void *) &(openClPrimaryVertexContext.mTracklets[iLayer][0]));
+					(void *) openClPrimaryVertexContext.mTracklets[iLayer]);
 
 		    }
 
@@ -241,14 +241,14 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					oclContext,
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					lookUpSize,
-					(void *) &(openClPrimaryVertexContext.mTrackletsLookupTable[iLayer][0]));
+					(void *) openClPrimaryVertexContext.mTrackletsLookupTable[iLayer]);
 		    }
 		}
 		openClPrimaryVertexContext.bClustersSize=cl::Buffer(
 						oclContext,
 						(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 						7*sizeof(int),
-						(void *) &(openClPrimaryVertexContext.iClusterSize[0]));
+						(void *) openClPrimaryVertexContext.iClusterSize);
 
 
 

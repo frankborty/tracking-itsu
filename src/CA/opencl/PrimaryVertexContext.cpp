@@ -165,7 +165,7 @@ void PrimaryVertexContext::initialize(cl::Context oclContext)
 		oclContext,
 		(cl_mem_flags)CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
 		o2::ITS::CA::Constants::ITS::CellsPerRoad*sizeof(int),
-		(void *) iCellsFoundForLayer);
+		(void *) &(iCellsFoundForLayer[0]));
 }
 
 }
