@@ -285,7 +285,7 @@ __kernel void countLayerCells(
 							if (distanceOfClosestApproach	<= CellMaxDistanceOfClosestApproachThreshold[iLayer]) {
 								atom_inc(&iCurrentCellCounter[iLayer]);
 								++trackletCellsNum;		
-								printf("");
+								//printf("");
 								
 							}
 						}

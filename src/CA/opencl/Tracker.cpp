@@ -516,36 +516,29 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 
-			oclCommandqueues[0].finish();
-			cellsFound = (int *) oclCommandqueues[0].enqueueMapBuffer(
+
+
+    	}
+
+
+
+    	//scan for cells lookup table
+#if CLOGS
+		//scan
+    	int *cellsFound;
+		for (int iLayer { 0 }; iLayer<Constants::ITS::CellsPerRoad; ++iLayer) {
+			//tx=clock();
+			//outFileLookUp<<"From layer "<<iLayer<<" to "<<iLayer+1<<"\n";
+			trackletsNum=trackletsFound[iLayer];
+			oclCommandqueues[iLayer].finish();
+			cellsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 					primaryVertexContext.openClPrimaryVertexContext.bCellsFoundForLayer,
 					CL_TRUE, // block
 					CL_MAP_READ,
 					0,
 					5*sizeof(int)
 			);
-
 			std::cout<<"["<<iLayer<<"] : "<<cellsFound[iLayer]<<std::endl;
-
-    	}
-
-    	//scan for cells lookup table
-#if CLOGS
-		//scan
-		for (int iLayer { 0 }; iLayer<Constants::ITS::CellsPerRoad; ++iLayer) {
-			//tx=clock();
-			//outFileLookUp<<"From layer "<<iLayer<<" to "<<iLayer+1<<"\n";
-			trackletsNum=trackletsFound[iLayer];
-			oclCommandqueues[iLayer].finish();
-			/*trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
-					primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
-					CL_TRUE, // block
-					CL_MAP_READ,
-					0,
-					6*sizeof(int)
-			);
-			trackletsFound[iLayer]++;
-			totalTrackletsFound+=trackletsFound[iLayer]-1;*/
 			if(iLayer==0){
 				clogs::ScanProblem problem;
 				problem.setType(clogs::TYPE_UINT);
@@ -639,6 +632,7 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 		//std::cout<<"calcolo le tracklet"<<std::endl;
 		//t1=clock();
 		for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad;++iLayer) {
+			outFileCell<<"Cells for layer "<<iLayer<<std::endl;
 			oclComputeKernel.setArg(0, primaryVertexContext.openClPrimaryVertexContext.bPrimaryVertex);  //0 fPrimaryVertex
 			oclComputeKernel.setArg(1, primaryVertexContext.openClPrimaryVertexContext.bLayerIndex[iLayer]); //1 iCurrentLayer
 			oclComputeKernel.setArg(2, primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer);  //2 iLayerTrackletSize
