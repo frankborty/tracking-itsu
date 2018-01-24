@@ -400,29 +400,9 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
     std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 
-#if 0
-    const char outputFileName[] = "../Initialization_time.txt";
-	std::ofstream outFile1;
-	outFile1.open((const char*)outputFileName,std::ofstream::out | std::ofstream::app);
-	outFile1 <<  diff << "\n";
-#endif
-
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
     evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
-
-#if 0
-    outFile<<"FirstTrackletIndex\tSecondTrackletIndex\tCurvature\tmLevel\tFirstClusterIndex\tSecondTrackletIndex\tThirdClusterIndex"<<"\n";
-    //print cells found
-    for(int iLayer=0;iLayer<o2::ITS::CA::Constants::ITS::CellsPerRoad;iLayer++){
-    	int cellNumber=mPrimaryVertexContext.getCells()[iLayer].size();
-    	outFile<<"Cell found starting from layer #"<<iLayer<<"\ttotal:"<<cellNumber<<"\n";
-    	for(int j=0;j<cellNumber;j++){
-    		Cell c=mPrimaryVertexContext.getCells()[iLayer][j];
-    		outFile<<c.mFirstTrackletIndex<<"\t"<<c.mSecondTrackletIndex<<"\t"<<c.mCurvature<<"\t"<<c.mLevel<<"\t"<<c.mFirstClusterIndex<<"\t"<<c.mSecondClusterIndex<<"\t"<<c.mThirdClusterIndex<<"\n";
-    	}
-    }
-#endif
-/*    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
+    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
     evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
     evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, "Computing Montecarlo Labels");
 
@@ -431,7 +411,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     std::cout << std::setw(2) << " - Vertex " << iVertex + 1 << " completed in: " << diff << "ms" << std::endl;
 
     roads.emplace_back(mPrimaryVertexContext.getRoads());
- */ }
+  }
 
   return roads;
 }
@@ -549,8 +529,13 @@ void Tracker<IsGPU>::computeCells()
 template<bool IsGPU>
 void Tracker<IsGPU>::findCellsNeighbours()
 {
-  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad - 1; ++iLayer) {
 
+	const char outputFileName[] = "../findCellsNeighbours-OCL.txt";
+	std::ofstream outFile;
+	outFile.open((const char*)outputFileName);
+
+  for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad - 1; ++iLayer) {
+	  outFile<<"iLayer:"<<iLayer<<"\n";
     if (mPrimaryVertexContext.getCells()[iLayer + 1].empty()
         || mPrimaryVertexContext.getCellsLookupTable()[iLayer].empty()) {
 
@@ -592,7 +577,7 @@ void Tracker<IsGPU>::findCellsNeighbours()
               && deltaCurvature < Constants::Thresholds::NeighbourCellMaxCurvaturesDelta[iLayer]) {
 
             mPrimaryVertexContext.getCellsNeighbours()[iLayer][iNextLayerCell].push_back(iCell);
-
+            outFile<<"iCell: "<<iCell<<"\n";
             const int currentCellLevel { currentCell.getLevel() };
 
             if (currentCellLevel >= nextCell.getLevel()) {

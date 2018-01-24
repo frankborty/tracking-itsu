@@ -63,7 +63,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   }
 
   std::vector<std::unordered_map<int, Label>> labelsMap;
-//  bool createBenchmarkData = false;
+  bool createBenchmarkData = false;
   std::ofstream correctRoadsOutputStream;
   std::ofstream duplicateRoadsOutputStream;
   std::ofstream fakeRoadsOutputStream;
@@ -77,7 +77,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 
     std::string labelsFileName(argv[2]);
 
-    createBenchmarkData = false;
+    createBenchmarkData = true;
     labelsMap = IOUtils::loadLabels(eventsNum, labelsFileName);
 
     correctRoadsOutputStream.open(benchmarkFolderName + "CorrectRoads.txt");
@@ -143,7 +143,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
         minTime = diff;
       if (maxTime < diff)
         maxTime = diff;
-/*
+
       for(int iVertex = 0; iVertex < currentEvent.getPrimaryVerticesNum(); ++iVertex) {
 
         std::cout << "Found " << roads[iVertex].size() << " roads for vertex " << iVertex + 1 << std::endl;
@@ -163,7 +163,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
         IOUtils::writeRoadsReport(correctRoadsOutputStream, duplicateRoadsOutputStream, fakeRoadsOutputStream, roads,
             labelsMap[iEvent]);
       }
-*/
+
     } catch (std::exception& e) {
 
       std::cout << e.what() << std::endl;

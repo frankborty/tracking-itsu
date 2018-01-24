@@ -62,6 +62,7 @@ class PrimaryVertexContext
         std::array<std::vector<int>, Constants::ITS::CellsPerRoad - 1>& getCellsLookupTable();
         std::array<std::vector<std::vector<int>>, Constants::ITS::CellsPerRoad - 1>& getCellsNeighbours();
         std::vector<Road>& getRoads();
+        std::array<std::vector<int>, Constants::ITS::CellsPerRoad - 1> mCellsLookupTable;
 
 /*
 #if TRACKINGITSU_GPU_MODE
@@ -92,7 +93,7 @@ class PrimaryVertexContext
         float3 mPrimaryVertex;
         std::array<std::vector<Cluster>, Constants::ITS::LayersNumber> mClusters;
         std::array<std::vector<Cell>, Constants::ITS::CellsPerRoad> mCells;
-        std::array<std::vector<int>, Constants::ITS::CellsPerRoad - 1> mCellsLookupTable;
+        //std::array<std::vector<int>, Constants::ITS::CellsPerRoad - 1> mCellsLookupTable;
         std::array<std::vector<std::vector<int>>, Constants::ITS::CellsPerRoad - 1> mCellsNeighbours;
         std::vector<Road> mRoads;
 

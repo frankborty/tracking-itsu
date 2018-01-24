@@ -14,6 +14,10 @@
 
 #include "ITSReconstruction/CA/Cell.h"
 
+#if TRACKINGITSU_OCL_MODE
+#include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
+#endif
+
 namespace o2
 {
 namespace ITS
@@ -30,6 +34,22 @@ GPU_DEVICE Cell::Cell(const int firstClusterIndex, const int secondClusterIndex,
 {
   // Nothing to do
 }
+
+GPU_DEVICE Cell::Cell(const int firstClusterIndex, const int secondClusterIndex, const int thirdClusterIndex,
+    const int firstTrackletIndex, const int secondTrackletIndex, const float normalVectorCoordinatesX,const float normalVectorCoordinatesY,const float normalVectorCoordinatesZ,
+    const float curvature)
+    : mFirstClusterIndex { firstClusterIndex },
+	  mSecondClusterIndex { secondClusterIndex },
+	  mThirdClusterIndex { thirdClusterIndex },
+	  mFirstTrackletIndex(firstTrackletIndex),
+	  mSecondTrackletIndex(secondTrackletIndex),
+	  mNormalVectorCoordinates{normalVectorCoordinatesX,normalVectorCoordinatesY,normalVectorCoordinatesZ},
+	  mCurvature { curvature },
+	  mLevel { 1 }
+{
+  // Nothing to do
+}
+
 
 }
 }

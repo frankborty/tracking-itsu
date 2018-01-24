@@ -85,6 +85,17 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 			const Layer& currentLayer { event.getLayer(iLayer) };
 			const int clustersNum { currentLayer.getClustersSize() };
 
+			mClusters[iLayer].clear();
+
+			if(clustersNum > (int)mClusters[iLayer].capacity()) {
+
+			  mClusters[iLayer].reserve(clustersNum);
+			}
+			for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
+			  const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
+			  mClusters[iLayer].emplace_back(iLayer, event.getPrimaryVertex(primaryVertexIndex), currentCluster);
+			}
+
 			if(openClPrimaryVertexContext.mClusters[iLayer]!=NULL)
 				free(openClPrimaryVertexContext.mClusters[iLayer]);
 
@@ -117,9 +128,11 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 				if(openClPrimaryVertexContext.mCells[iLayer]!=NULL)
 					free(openClPrimaryVertexContext.mCells[iLayer]);
 
+
+				mCells[iLayer].clear();
 				float cellsMemorySize = std::ceil(((Constants::Memory::CellsMemoryCoefficients[iLayer] * event.getLayer(iLayer).getClustersSize())
 				 * event.getLayer(iLayer + 1).getClustersSize()) * event.getLayer(iLayer + 2).getClustersSize());
-
+				mCells[iLayer].reserve(cellsMemorySize);
 
 				int cellSize=cellsMemorySize*sizeof(CellStruct);
 				openClPrimaryVertexContext.iCellSize[iLayer]=cellsMemorySize;
@@ -150,12 +163,15 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					CellsLookupTableSize,
 					(void *) openClPrimaryVertexContext.iCellsLookupTable[iLayer]);
 
-				if(openClPrimaryVertexContext.mCellsNeighbours[iLayer]!=NULL)
-					free(openClPrimaryVertexContext.mCellsNeighbours[iLayer]);
+				if(iLayer < Constants::ITS::CellsPerRoad - 1) {
+					mCellsLookupTable[iLayer].clear();
+					mCellsLookupTable[iLayer].resize(cellsLookupTableMemorySize);
 
+					mCellsNeighbours[iLayer].clear();
+					}
 			}
 		}
-
+		mRoads.clear();
 
 		for (int iLayer { 0 }; iLayer < Constants::ITS::LayersNumber; ++iLayer) {
 			const int clustersNum = static_cast<int>(openClPrimaryVertexContext.iClusterSize[iLayer]);
@@ -241,7 +257,7 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 					(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 					lookUpSize,
 					(void *) openClPrimaryVertexContext.mTrackletsLookupTable[iLayer]);
-		    }
+			}
 		}
 		openClPrimaryVertexContext.bClustersSize=cl::Buffer(
 						oclContext,

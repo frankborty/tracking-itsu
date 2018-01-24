@@ -685,6 +685,53 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 		}
 
 
+
+		//copy cell found to c++ struct
+		for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad;++iLayer) {
+			CellStruct* mCells = (CellStruct *) oclCommandqueues[iLayer].enqueueMapBuffer(
+				primaryVertexContext.openClPrimaryVertexContext.bCells[iLayer],
+				CL_TRUE, // block
+				CL_MAP_READ,
+				0,
+				cellsFound[iLayer]*sizeof(CellStruct)
+			);
+			for(int j {0};j<cellsFound[iLayer];j++){
+				float3 normalVectorCoordinates;
+				normalVectorCoordinates.x=mCells[j].mNormalVectorCoordinates.x;
+				normalVectorCoordinates.y=mCells[j].mNormalVectorCoordinates.y;
+				normalVectorCoordinates.z=mCells[j].mNormalVectorCoordinates.z;
+				primaryVertexContext.getCells()[iLayer].emplace_back(
+						mCells[j].mFirstClusterIndex,
+						mCells[j].mSecondClusterIndex,
+						mCells[j].mThirdClusterIndex,
+						mCells[j].mFirstTrackletIndex,
+						mCells[j].mSecondTrackletIndex,
+						normalVectorCoordinates,
+						mCells[j].mCurvature);
+			}
+			if(iLayer>0){
+				trackletsNum=trackletsFound[iLayer];
+				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
+						primaryVertexContext.openClPrimaryVertexContext.bCellsLookupTable[iLayer-1],
+						CL_TRUE, // block
+						CL_MAP_READ,
+						0,
+						trackletsNum*sizeof(int)
+				);
+				if(iLayer>=1){
+					for(int j {0};j<trackletsNum;j++){
+						if(lookUpFound[j]!=0){
+							primaryVertexContext.mCellsLookupTable[iLayer-1][j]=lookUpFound[j];
+							//std::cout<<"["<<iLayer<<"]["<<j <<"]: "<<lookUpFound[j]<<std::endl;
+						}
+					}
+				}
+			}
+
+
+		}
+
+
   	}catch (...) {
 		std::cout<<"Exception during compute cells phase"<<std::endl;
 		throw std::runtime_error { "Exception during compute cells phase" };
