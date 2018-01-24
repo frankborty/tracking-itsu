@@ -101,7 +101,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
 //  tracker.clustersToTracks(events[0]);
   tracker.clustersToTracksVerbose(events[0]);
   //tracker.clustersToTracksTimeBenchmark(events[0],timeBenchmarkOutputStream);
-return 1;
+
 #if defined GPU_PROFILING_MODE
   Utils::Host::gpuStartProfiler();
 #endif

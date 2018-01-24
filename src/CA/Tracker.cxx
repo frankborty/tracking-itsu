@@ -409,6 +409,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
     evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
+
 #if 0
     outFile<<"FirstTrackletIndex\tSecondTrackletIndex\tCurvature\tmLevel\tFirstClusterIndex\tSecondTrackletIndex\tThirdClusterIndex"<<"\n";
     //print cells found

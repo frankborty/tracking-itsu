@@ -55,7 +55,6 @@ PrimaryVertexContext::PrimaryVertexContext()
 }
 
 
-
 void PrimaryVertexContext::initialize(const Event& event, const int primaryVertexIndex) {
 #ifdef TRACKINGITSU_OCL_MODE
 	time_t t1,t2;

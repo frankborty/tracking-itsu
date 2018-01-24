@@ -189,6 +189,7 @@ __kernel void countLayerCells(
 	int iLayer=*iCurrentLayer;
 	int itmp=0;
 	int trackletCellsNum = 0;
+	iCellsPerTrackletPreviousLayer[currentTrackletIndex]=0;
 	if (currentTrackletIndex < iLayerTrackletSize[iLayer]) {
 		const TrackletStruct* currentTracklet=&currentLayerTracklets[currentTrackletIndex];
 		//printf("first Clusert %d - second Clusert %d\n",currentTracklet->firstClusterIndex,currentTracklet->secondClusterIndex);
@@ -292,12 +293,9 @@ __kernel void countLayerCells(
 					}
 				}
 			}
-
+				
 			if(trackletCellsNum>0) {
 				iCellsPerTrackletPreviousLayer[currentTrackletIndex] = trackletCellsNum;
-			}
-			else{
-				iCellsPerTrackletPreviousLayer[currentTrackletIndex] = 0;
 			}
 
 		}
@@ -429,21 +427,21 @@ __kernel void computeLayerCells(
 
 							if (distanceOfClosestApproach	<= CellMaxDistanceOfClosestApproachThreshold[iLayer]) {
 								__global CellStruct* cell=&currentLayerCells[currentLookUpValue];
-		    			  			    			  	
+		    			  		
 		    			  		cell->mFirstClusterIndex=currentTracklet->firstClusterIndex;
 								cell->mSecondClusterIndex=currentTracklet->secondClusterIndex;
 								cell->mThirdClusterIndex=nextTracklet->secondClusterIndex;
-								cell->mFirstTrackletIndex=nextTracklet->secondClusterIndex;
+								cell->mFirstTrackletIndex=currentTrackletIndex;
 								cell->mSecondTrackletIndex=iNextLayerTracklet;
 								cell->mNormalVectorCoordinates.x=normalizedPlaneVector.x;
 								cell->mNormalVectorCoordinates.y=normalizedPlaneVector.y;
 								cell->mNormalVectorCoordinates.z=normalizedPlaneVector.z;
 								cell->mCurvature=1.0f/cellTrajectoryRadius;
 								cell->mLevel=1;
-		    			  	
+								
+		    			  		//printf("current lookup value = %d\tfirst cluster index = %d\n",currentLookUpValue,cell->mFirstClusterIndex);
+		    			  		
 								currentLookUpValue++;
-								//if(iLayer==0)
-									//printf("%d\n",currentLookUpValue);
 								if(currentLookUpValue==nextLookUpValue)
 						  			return;	
 							}

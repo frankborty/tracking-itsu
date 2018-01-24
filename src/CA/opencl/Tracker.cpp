@@ -189,10 +189,10 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 				//cl::NullRange);
-			time_t ty=clock();
+/*			time_t ty=clock();
 			float countTrack = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			//std::cout<< "["<<iLayer<<"]countTrack time " << countTrack <<" ms" << std::endl;
-/*
+
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 					primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
@@ -427,10 +427,8 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 	cl::CommandQueue oclCommandQueue;
 	//int *firstLayerLookUpTable;
 	int trackletsNum;
-	//time_t t1,t2;
+	time_t t1,t2;
 	int workgroupSize=5*32;
-	int *cellsFound;
-
 
 
 	try{
@@ -448,7 +446,11 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 			(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 			7*sizeof(int),
 			(void *) &(tmpCellFound[0]));
-
+/*
+		const char outputFileName[] = "../LookupTableCells-ocl.txt";
+		std::ofstream outFileLookUp;
+		outFileLookUp.open((const char*)outputFileName);
+*/
 
 
   		for(int i=0;i<Constants::ITS::CellsPerRoad;i++){
@@ -458,16 +460,15 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
   		const char outputCellFileName[] = "../oclCellsFound.txt";
 		std::ofstream outFileCell;
 		outFileCell.open((const char*)outputCellFileName);
-
-
+		outFileCell<<"FirstTrackletIndex	SecondTrackletIndex	Curvature    mLevel	FirstClusterIndex	SecondTrackletIndex	ThirdClusterIndex\n";
   		//create buffer for allocate the number of cell found for each layer
   		int *trackletsFound = (int *) oclCommandqueues[0].enqueueMapBuffer(
-  							primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
-  							CL_TRUE, // block
-  							CL_MAP_READ,
-  							0,
-  							6*sizeof(int)
-  				);
+			primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
+			CL_TRUE, // block
+			CL_MAP_READ,
+			0,
+			6*sizeof(int)
+		);
 
   		int firstLayerTrackletsNumber=trackletsFound[0];
   		iCellsLookUpTableForLayer0=(int*)malloc(firstLayerTrackletsNumber*sizeof(int));
@@ -478,7 +479,7 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 				firstLayerTrackletsNumber*sizeof(int),
 				(void *) iCellsLookUpTableForLayer0);
 
-
+		t1=clock();
   		//compute the number of cells for each layer
     	for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad;++iLayer) {
 
@@ -508,24 +509,21 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 				pseudoClusterNumber=(mult+1)*workgroupSize;
 			}
 
-
-
 			oclCommandqueues[iLayer].enqueueNDRangeKernel(
 				oclCountKernel,
 				cl::NullRange,
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
-
-
-
     	}
-
-
+    	//t2=clock();
+    	//float time = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+    	//std::cout<< "\tCount cells" <<" time = "<<time<<" ms" << std::endl;
 
     	//scan for cells lookup table
 #if CLOGS
 		//scan
     	int *cellsFound;
+    	t1=clock();
 		for (int iLayer { 0 }; iLayer<Constants::ITS::CellsPerRoad; ++iLayer) {
 			//tx=clock();
 			//outFileLookUp<<"From layer "<<iLayer<<" to "<<iLayer+1<<"\n";
@@ -538,7 +536,7 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 					0,
 					5*sizeof(int)
 			);
-			std::cout<<"["<<iLayer<<"] : "<<cellsFound[iLayer]<<std::endl;
+			//std::cout<<"["<<iLayer<<"] : "<<cellsFound[iLayer]<<std::endl;
 			if(iLayer==0){
 				clogs::ScanProblem problem;
 				problem.setType(clogs::TYPE_UINT);
@@ -563,18 +561,19 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 					//cl::NDRange(workgroupSize));
 					//cl::NullRange);
 */
-/*
-				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
-						bTrackletLookUpTable,
+
+/*				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
+						bCellsLookUpTableForLayer0,
 						CL_TRUE, // block
 						CL_MAP_READ,
 						0,
-						clustersNum*sizeof(int)
+						trackletsNum*sizeof(int)
 				);
 				outFileLookUp<<"Layer "<<iLayer<<"\n";
 				//std::cout<<clustersNum<<std::endl;
-				for(int j=0;j<clustersNum;j++)
+				for(int j=0;j<trackletsNum;j++)
 					outFileLookUp<<j<<"\t"<<lookUpFound[j]<<"\n";
+				std::cout<<"Layer: "<<iLayer<<"\ttrackletsNum: "<<trackletsNum<<"\tcell:<"<<lookUpFound[trackletsNum-1]<<std::endl;
 				outFileLookUp<<"\n";
 */
 			}
@@ -599,17 +598,18 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 					cl::NullRange,
 					cl::NDRange(pseudoClusterNumber),
 					cl::NDRange(workgroupSize));
-*//*
-				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
-						primaryVertexContext.openClPrimaryVertexContext.bTrackletsLookupTable[iLayer-1],
+*/
+/*				int* lookUpFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
+						primaryVertexContext.openClPrimaryVertexContext.bCellsLookupTable[iLayer-1],
 						CL_TRUE, // block
 						CL_MAP_READ,
 						0,
-						clustersNum*sizeof(int)
+						trackletsNum*sizeof(int)
 				);
 				outFileLookUp<<"Layer "<<iLayer<<"\n";
-				for(int j=0;j<clustersNum;j++)
+				for(int j=0;j<trackletsNum;j++)
 					outFileLookUp<<j<<"\t"<<lookUpFound[j]<<"\n";
+				std::cout<<"Layer: "<<iLayer<<"\ttrackletsNum: "<<trackletsNum<<"\tcell:<"<<lookUpFound[trackletsNum-1]<<std::endl;
 				outFileLookUp<<"\n";
 */
 			}
@@ -617,7 +617,10 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 			//float time = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			//std::cout<< "\t " << iLayer <<" time = "<<time<<" ms" << std::endl;
 		}
-		//std::cout<<"finish sort"<<std::endl;
+		//std::cout<<"finish scan"<<std::endl;
+		//t2=clock();
+		//time = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+		//std::cout<< "\tScan cells" <<" time = "<<time<<" ms" << std::endl;
 #ifdef PRINT_EXECUTION_TIME
 		t2 = clock();
 		float scanTrack = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
@@ -632,7 +635,6 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 		//std::cout<<"calcolo le tracklet"<<std::endl;
 		//t1=clock();
 		for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad;++iLayer) {
-			outFileCell<<"Cells for layer "<<iLayer<<std::endl;
 			oclComputeKernel.setArg(0, primaryVertexContext.openClPrimaryVertexContext.bPrimaryVertex);  //0 fPrimaryVertex
 			oclComputeKernel.setArg(1, primaryVertexContext.openClPrimaryVertexContext.bLayerIndex[iLayer]); //1 iCurrentLayer
 			oclComputeKernel.setArg(2, primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer);  //2 iLayerTrackletSize
@@ -656,27 +658,30 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 				pseudoClusterNumber=(mult+1)*workgroupSize;
 			}
 
-
-
 			oclCommandqueues[iLayer].enqueueNDRangeKernel(
 				oclComputeKernel,
 				cl::NullRange,
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 
-
+			oclCommandqueues[iLayer].finish();
+/*
 			CellStruct* output = (CellStruct *) oclCommandqueues[iLayer].enqueueMapBuffer(
 				primaryVertexContext.openClPrimaryVertexContext.bCells[iLayer],
 				CL_TRUE, // block
 				CL_MAP_READ,
 				0,
-				cellsFound[iLayer]
+				cellsFound[iLayer]*sizeof(CellStruct)
 			);
-
-			for(int i=0;i<cellsFound[iLayer];i++)
+			oclCommandqueues[iLayer].finish();
+			outFileCell<<"Cell found starting from layer #"<<iLayer<<"	total:"<<cellsFound[iLayer]<<"\n";
+			for(int i=0;i<cellsFound[iLayer];i++){
+				//std::cout<<i<<std::endl;
 				outFileCell<<output[i].mFirstTrackletIndex<<"\t"<<output[i].mSecondTrackletIndex<<"\t"<<output[i].mCurvature<<"\t"<<output[i].mLevel<<"\t"<<output[i].mFirstClusterIndex<<"\t"<<output[i].mSecondClusterIndex<<"\t"<<output[i].mThirdClusterIndex<<"\n";
-
-
+				//outFileCell<<output[i].mFirstClusterIndex<<"\n";
+			}
+			std::cout<<"end layer "<<iLayer<<std::endl;
+*/
 		}
 
 
