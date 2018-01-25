@@ -423,6 +423,7 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 	cl::Buffer bLayerID;
 	cl::Buffer bCellsLookUpTableForLayer0;
 	int * iCellsLookUpTableForLayer0;
+	int *cellsFound;
 	cl::CommandQueue oclCommandQueue;
 	//int *firstLayerLookUpTable;
 	int trackletsNum;
@@ -521,7 +522,6 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
     	//scan for cells lookup table
 #if CLOGS
 		//scan
-    	int *cellsFound;
     	t1=clock();
 		for (int iLayer { 0 }; iLayer<Constants::ITS::CellsPerRoad; ++iLayer) {
 			//tx=clock();
