@@ -23,14 +23,13 @@
 #include <ITSReconstruction/CA/Tracker.h>
 #include <ITSReconstruction/CA/Tracklet.h>
 #include "ITSReconstruction/CA/Definitions.h"
-#include <StructGPUPrimaryVertex.h>
 #include <Utils.h>
 #include <Vector.h>
 #include <stdexcept>
 #include <string>
 
 #if TRACKINGITSU_OCL_MODE
-//#include <CL/cl.hpp>
+#include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
 #include "ITSReconstruction/CA/gpu/myThresholds.h"
 	#if CLOGS
 	#include <clogs/clogs.h>
