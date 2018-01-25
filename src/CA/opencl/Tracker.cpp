@@ -106,7 +106,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 	int clustersNum;
 	time_t t1;
 	//time_t t2;
-	//time_t tx,ty;
+	time_t tx,ty;
 	int* trackletsFound;
 	int workgroupSize=5*32;
 	int totalTrackletsFound=0;
@@ -159,7 +159,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 		t1=clock();
 		for (int iLayer{ 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer) {
-			//tx=clock();
+			tx=clock();
 
   			clustersNum=primaryVertexContext.openClPrimaryVertexContext.iClusterSize[iLayer];
 
@@ -181,17 +181,17 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				pseudoClusterNumber=(mult+1)*workgroupSize;
 			}
 
-			time_t tx=clock();
+//			time_t tx=clock();
 			oclCommandqueues[iLayer].enqueueNDRangeKernel(
 				oclCountKernel,
 				cl::NullRange,
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 				//cl::NullRange);
-/*			time_t ty=clock();
+			time_t ty=clock();
 			float countTrack = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
-			//std::cout<< "["<<iLayer<<"]countTrack time " << countTrack <<" ms" << std::endl;
-
+			std::cout<< "["<<iLayer<<"]countTrack time " << countTrack <<" ms" << std::endl;
+/*
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 					primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,

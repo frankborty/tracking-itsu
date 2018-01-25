@@ -401,10 +401,10 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
-    evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
-    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
-    evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
-    evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, "Computing Montecarlo Labels");
+    //evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
+    //evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
+    //evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
+    //evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, "Computing Montecarlo Labels");
 
     t2 = clock();
     diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);

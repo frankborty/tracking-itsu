@@ -106,7 +106,7 @@ myZThreshold=Constants::Thresholds::TrackletMaxDeltaZThreshold()[0];
   Utils::Host::gpuStartProfiler();
 #endif
 
-  for (size_t iEvent = 0; iEvent < events.size(); ++iEvent) {
+  for (size_t iEvent = 0; iEvent < 28/*events.size()*/; ++iEvent) {
 
     Event& currentEvent = events[iEvent];
     std::cout << "Processing event " << iEvent + 1 << std::endl;
