@@ -1,5 +1,5 @@
-echo "cd oclBuild"
-cd oclBuild
+echo "cd oclBuildNoClogs"
+cd oclBuildNoClogs
 
 echo "rm -rf CMakeFiles"
 rm -rf CMakeFiles
@@ -22,8 +22,8 @@ rm -f Makefile
 echo "rm -f tracking-itsu-main"
 rm -f tracking-itsu-main
 
-echo "cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DTRACKINGITSU_TARGET_DEVICE=OPEN_CL ../tracking-itsu/"
-cmake -G"Eclipse CDT4 - Unix Makefiles" -O3 -std=c++11  -DTRACKINGITSU_TARGET_DEVICE=OPEN_CL -DUSE_CLOGS=NO ../tracking-itsu/
+echo "cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DTRACKINGITSU_TARGET_DEVICE=OPEN_CL ../tracking_ocl/"
+cmake -G"Eclipse CDT4 - Unix Makefiles" -O3 -std=c++11  -DTRACKINGITSU_TARGET_DEVICE=OPEN_CL -DUSE_CLOGS=NO ../tracking_ocl/
 
 echo "make -j"
 make -j
