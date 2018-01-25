@@ -12,7 +12,7 @@
 /// \brief
 ///
 
-#if 0
+#if 1
 #define PRINT_EXECUTION_TIME
 #endif
 
@@ -105,7 +105,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 	int *firstLayerLookUpTable;
 	int clustersNum;
 	time_t t1;
-	//time_t t2;
+	time_t t2;
 	time_t tx,ty;
 	int* trackletsFound;
 	int workgroupSize=5*32;
@@ -118,14 +118,10 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 		std::string deviceName;
 		oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
-		std::cout<< "Device: "<<deviceName<<std::endl;
+		//std::cout<< "Device: "<<deviceName<<std::endl;
 
-		//must be move to oclContext create
-/*		cl::Kernel oclCountKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
-		cl::Kernel oclComputeKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
-		cl::Kernel oclTestKernel=GPU::Utils::CreateKernelFromFile(oclContext,oclDevice,"./src/kernel/computeLayerTracklets.cl","openClScan");
-		//
-*/		cl::Kernel oclCountKernel=GPU::Context::getInstance().getDeviceProperties().oclCountKernel;
+
+		cl::Kernel oclCountKernel=GPU::Context::getInstance().getDeviceProperties().oclCountKernel;
 		cl::Kernel oclComputeKernel=GPU::Context::getInstance().getDeviceProperties().oclComputeKernel;
 		cl::Kernel oclTestKernel=GPU::Context::getInstance().getDeviceProperties().oclTestKernel;
 
@@ -188,9 +184,12 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				cl::NDRange(pseudoClusterNumber),
 				cl::NDRange(workgroupSize));
 				//cl::NullRange);
+
+#ifdef PRINT_EXECUTION_TIME
 			time_t ty=clock();
 			float countTrack = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			std::cout<< "["<<iLayer<<"]countTrack time " << countTrack <<" ms" << std::endl;
+#endif
 /*
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
@@ -456,12 +455,13 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
   		for(int i=0;i<Constants::ITS::CellsPerRoad;i++){
   			oclCommandqueues[i]=cl::CommandQueue(oclContext, oclDevice, 0);
   		}
-
+#if 0
   		const char outputCellFileName[] = "../oclCellsFound.txt";
 		std::ofstream outFileCell;
 		outFileCell.open((const char*)outputCellFileName);
 		outFileCell<<"FirstTrackletIndex	SecondTrackletIndex	Curvature    mLevel	FirstClusterIndex	SecondTrackletIndex	ThirdClusterIndex\n";
-  		//create buffer for allocate the number of cell found for each layer
+#endif
+		//create buffer for allocate the number of cell found for each layer
   		int *trackletsFound = (int *) oclCommandqueues[0].enqueueMapBuffer(
 			primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
 			CL_TRUE, // block

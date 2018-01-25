@@ -63,8 +63,10 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 		t1=clock();
 		cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
 		t2=clock();
+#if 0
 		diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 		std::cout << "OClContext = "<<diff << std::endl;
+#endif
 		openClPrimaryVertexContext.initialize(oclContext);
 
 		float3 mPrimaryVertex=event.getPrimaryVertex(primaryVertexIndex);
