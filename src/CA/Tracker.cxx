@@ -280,17 +280,49 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
   std::vector<std::vector<Road>> roads { };
   roads.reserve(verticesNum);
 
+#if 0
+  const char outputFileNameC[] = "../ClustersC-ocl.txt";
+  std::ofstream outFileC;
+  outFileC.open((const char*)outputFileNameC);
+  const char outputFileNameCPP[] = "../ClustersCPP-ocl.txt";
+  std::ofstream outFileCPP;
+  outFileCPP.open((const char*)outputFileNameCPP);
+#endif
+
+
   for (int iVertex { 0 }; iVertex < verticesNum; ++iVertex) {
 
       mPrimaryVertexContext.initialize(event, iVertex);
 
+      //stampo i cluster
+#if 0
+      int j;
+      for(int i=0;i<7;i++){
+		  int clusterNum=mPrimaryVertexContext.getClusters()[0].size();
+		  int clusterNumOcl=mPrimaryVertexContext.openClPrimaryVertexContext.iClusterSize[i];
+		  outFileCPP<<"Layer "<<i<<"\t["<<clusterNum<<"]\n";
+		  outFileC<<"Layer "<<i<<"\t["<<clusterNumOcl<<"]\n";
+		  for(j=0;j<clusterNum;j++){
+			  Cluster cpp=mPrimaryVertexContext.getClusters()[i][j];
+			  outFileCPP<<cpp.clusterId<<" "<<cpp.indexTableBinIndex<<" "<<cpp.monteCarloId<<"\n";
+		  }
+		  for(j=0;j<clusterNumOcl;j++){
+			  ClusterStruct c=mPrimaryVertexContext.openClPrimaryVertexContext.mClusters[i][j];
+			  outFileC<<c.clusterId<<" "<<c.indexTableBinIndex<<" "<<c.monteCarloId<<"\n";
+		  }
+
+      }
+#endif
+
       computeTracklets();
+#if CLOGS
       computeCells();
       findCellsNeighbours();
       findTracks();
       computeMontecarloLabels();
 
       roads.emplace_back(mPrimaryVertexContext.getRoads());
+#endif
   }
 
   return roads;
@@ -322,6 +354,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
+#if CLOGS
     evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
     evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
     evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");
@@ -330,8 +363,9 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     t2 = clock();
     diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
     std::cout << std::setw(2) << " - Vertex " << iVertex + 1 << " completed in: " << diff << "ms" << std::endl;
-
     roads.emplace_back(mPrimaryVertexContext.getRoads());
+#endif
+
   }
 
   return roads;
@@ -389,7 +423,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksMemoryBenchmark(
     }
 
     memoryBenchmarkOutputStream << std::endl;
-
+#if CLOGS
     findCellsNeighbours();
     findTracks();
     computeMontecarloLabels();
@@ -397,6 +431,7 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksMemoryBenchmark(
     roads.emplace_back(mPrimaryVertexContext.getRoads());
 
     memoryBenchmarkOutputStream << mPrimaryVertexContext.getRoads().size() << std::endl;
+#endif
   }
 
   return roads;
@@ -420,16 +455,18 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksTimeBenchmark(
     mPrimaryVertexContext.initialize(event, iVertex);
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, nullptr, timeBenchmarkOutputStream);
-//    evaluateTask(&Tracker<IsGPU>::computeCells, nullptr, timeBenchmarkOutputStream);
-//    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, nullptr, timeBenchmarkOutputStream);
-//    evaluateTask(&Tracker<IsGPU>::findTracks, nullptr, timeBenchmarkOutputStream);
-//    evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, nullptr, timeBenchmarkOutputStream);
+#if CLOGS
+    evaluateTask(&Tracker<IsGPU>::computeCells, nullptr, timeBenchmarkOutputStream);
+    evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, nullptr, timeBenchmarkOutputStream);
+    evaluateTask(&Tracker<IsGPU>::findTracks, nullptr, timeBenchmarkOutputStream);
+    evaluateTask(&Tracker<IsGPU>::computeMontecarloLabels, nullptr, timeBenchmarkOutputStream);
 
     t2 = clock();
     diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
     timeBenchmarkOutputStream << diff << std::endl;
 
     roads.emplace_back(mPrimaryVertexContext.getRoads());
+#endif
   }
 
   return roads;
@@ -452,6 +489,7 @@ void Tracker<IsGPU>::findCellsNeighbours()
 {
 #if 0
 	const char outputFileName[] = "../findCellsNeighbours-OCL.txt";
+	//const char outputFileName[] = "../findCellsNeighbours-CPU.txt";
 	std::ofstream outFile;
 	outFile.open((const char*)outputFileName);
 #endif
@@ -519,12 +557,21 @@ void Tracker<IsGPU>::findCellsNeighbours()
 template<bool IsGPU>
 void Tracker<IsGPU>::findTracks()
 {
+#if 0
+	const char outputFileName[] = "../findTracks-OCL.txt";
+	std::ofstream outFile;
+	outFile.open((const char*)outputFileName);
+#endif
   for (int iLevel { Constants::ITS::CellsPerRoad }; iLevel >= Constants::Thresholds::CellsMinLevel; --iLevel) {
-
+#if 0
+	  outFile<<"iLevel:"<<iLevel<<"\n";
+#endif
     const int minimumLevel { iLevel - 1 };
 
     for (int iLayer { Constants::ITS::CellsPerRoad - 1 }; iLayer >= minimumLevel; --iLayer) {
-
+#if 0
+	  outFile<<"\tiLayer:"<<iLayer<<"\n";
+#endif
       const int levelCellsNum { static_cast<int>(mPrimaryVertexContext.getCells()[iLayer].size()) };
 
       for (int iCell { 0 }; iCell < levelCellsNum; ++iCell) {
@@ -537,7 +584,9 @@ void Tracker<IsGPU>::findTracks()
         }
 
         mPrimaryVertexContext.getRoads().emplace_back(iLayer, iCell);
-
+#if 0
+        outFile<<"\t"<<iCell<<"\n";
+#endif
         const int cellNeighboursNum {
             static_cast<int>(mPrimaryVertexContext.getCellsNeighbours()[iLayer - 1][iCell].size()) };
         bool isFirstValidNeighbour = true;
@@ -557,8 +606,10 @@ void Tracker<IsGPU>::findTracks()
             isFirstValidNeighbour = false;
 
           } else {
-
             mPrimaryVertexContext.getRoads().emplace_back(iLayer, iCell);
+			#if 0
+					outFile<<"\t\t"<<iCell<<"\n";
+			#endif
           }
 
           traverseCellsTree(neighbourCellId, iLayer - 1);
@@ -574,11 +625,18 @@ void Tracker<IsGPU>::findTracks()
 template<bool IsGPU>
 void Tracker<IsGPU>::traverseCellsTree(const int currentCellId, const int currentLayerId)
 {
+#if 0
+	const char outputFileName[] = "../traverseCellsTree-CPU.txt";
+	std::ofstream outFile;
+	outFile.open((const char*)outputFileName,std::ofstream::out | std::ofstream::app);
+#endif
   Cell& currentCell { mPrimaryVertexContext.getCells()[currentLayerId][currentCellId] };
   const int currentCellLevel = currentCell.getLevel();
 
   mPrimaryVertexContext.getRoads().back().addCell(currentLayerId, currentCellId);
-
+#if 0
+	outFile<<"\taddCell "<<currentLayerId<<" "<<currentCellId<<"\n";
+#endif
   if (currentLayerId > 0) {
 
     const int cellNeighboursNum {
@@ -599,10 +657,16 @@ void Tracker<IsGPU>::traverseCellsTree(const int currentCellId, const int curren
       if (isFirstValidNeighbour) {
 
         isFirstValidNeighbour = false;
+#if 0
+        outFile<<"\t\tisFirstValidNeighbour=false "<<neighbourCellId<<"\n";
+#endif
 
       } else {
 
         mPrimaryVertexContext.getRoads().push_back(mPrimaryVertexContext.getRoads().back());
+#if 0
+        outFile<<"\t\t\tpush_back getRoads().back()\n";
+#endif
       }
 
       traverseCellsTree(neighbourCellId, currentLayerId - 1);
@@ -617,12 +681,17 @@ template<bool IsGPU>
 void Tracker<IsGPU>::computeMontecarloLabels()
 {
 /// Moore’s Voting Algorithm
-
+#if 0
+	const char outputFileName[] = "../computeMonteCarloLabelsRoads-OCL.txt";
+	std::ofstream outFile;
+	outFile.open((const char*)outputFileName,std::ofstream::out | std::ofstream::app);
+#endif
   int roadsNum { static_cast<int>(mPrimaryVertexContext.getRoads().size()) };
-
   for (int iRoad { 0 }; iRoad < roadsNum; ++iRoad) {
-
     Road& currentRoad { mPrimaryVertexContext.getRoads()[iRoad] };
+#if 0
+    outFile<<"["<<iRoad<<"] "<<currentRoad[0]<<" "<<currentRoad[1]<<" "<<currentRoad[2]<<" "<<currentRoad[3]<<" "<<currentRoad[4]<<"\t"<<currentRoad.isFakeRoad()<<"\n";
+#endif
     int maxOccurrencesValue { Constants::ITS::UnusedIndex };
     int count { 0 };
     bool isFakeRoad { false };
@@ -651,10 +720,15 @@ void Tracker<IsGPU>::computeMontecarloLabels()
         maxOccurrencesValue =
             mPrimaryVertexContext.getClusters()[iCell][currentCell.getFirstClusterIndex()].monteCarloId;
         count = 1;
-
+#if 0
+       Cluster cl=mPrimaryVertexContext.getClusters()[iCell][currentCell.getFirstClusterIndex()];
+       outFile<<"\t[Cluster "<<currentCell.getFirstClusterIndex()<<"] "<<cl.clusterId<<" "<<cl.monteCarloId<<"\n";
+#endif
         const int secondMonteCarlo {
           mPrimaryVertexContext.getClusters()[iCell + 1][currentCell.getSecondClusterIndex()].monteCarloId };
-
+#if 0
+    outFile<<"\t[maxOccurrencesValue] "<<maxOccurrencesValue<<" [secondMonteCarlo] "<<secondMonteCarlo<<"\n";
+#endif
         if (secondMonteCarlo == maxOccurrencesValue) {
 
           ++count;
@@ -671,7 +745,9 @@ void Tracker<IsGPU>::computeMontecarloLabels()
 
       const int currentMonteCarlo {
         mPrimaryVertexContext.getClusters()[iCell + 2][currentCell.getThirdClusterIndex()].monteCarloId };
-
+#if 0
+    outFile<<"\t[currentMonteCarlo] "<<currentMonteCarlo<<"\n";
+#endif
       if (currentMonteCarlo == maxOccurrencesValue) {
 
         ++count;
@@ -691,6 +767,9 @@ void Tracker<IsGPU>::computeMontecarloLabels()
 
     currentRoad.setLabel(maxOccurrencesValue);
     currentRoad.setFakeRoad(isFakeRoad);
+#if 0
+	outFile<<"setLabel ["<<iRoad<<"]\t"<<maxOccurrencesValue<<"\t"<<isFakeRoad<<"\n";
+#endif
   }
 }
 

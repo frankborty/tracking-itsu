@@ -12,7 +12,7 @@
 /// \brief
 ///
 
-#if 1
+#if 0
 #define PRINT_EXECUTION_TIME
 #endif
 
@@ -108,8 +108,9 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 	time_t t2;
 	time_t tx,ty;
 	int* trackletsFound;
-	int workgroupSize=5*32;
 	int totalTrackletsFound=0;
+
+	int workgroupSize=5*32;
 	try{
 
 		cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
@@ -190,7 +191,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			float countTrack = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			std::cout<< "["<<iLayer<<"]countTrack time " << countTrack <<" ms" << std::endl;
 #endif
-/*
+
 			oclCommandqueues[iLayer].finish();
 			trackletsFound = (int *) oclCommandqueues[iLayer].enqueueMapBuffer(
 					primaryVertexContext.openClPrimaryVertexContext.bTrackletsFoundForLayer,
@@ -203,11 +204,12 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 			totalTrackletsFound+=trackletsFound[iLayer]-1;
 
 			std::cout<<"Tracklet layer "<<iLayer<<" = "<<trackletsFound[iLayer]<<std::endl;
-*/
+
 			//ty=clock();
 			//float time = ((float) ty - (float) tx) / (CLOCKS_PER_SEC / 1000);
 			//std::cout<< "\tLayer " << iLayer <<" time = "<<time<<" ms" <<"\tWG = " <<workgroupSize<<"\tclusterNr = "<<clustersNum<<"\tpseudoClusterNr = "<<pseudoClusterNumber<<std::endl;
 		}
+		std::cout<<"Total Tracklet Found  = "<<totalTrackletsFound<<std::endl;
 
 #ifdef PRINT_EXECUTION_TIME
 		t2 = clock();

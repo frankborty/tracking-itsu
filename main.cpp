@@ -8,7 +8,7 @@
 #include "ITSReconstruction/CA/IOUtils.h"
 #include "ITSReconstruction/CA/Tracker.h"
 
-#define TIME_BENCHMARK
+//#define TIME_BENCHMARK
 
 #if defined HAVE_VALGRIND
 # include <valgrind/callgrind.h>

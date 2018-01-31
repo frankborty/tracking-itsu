@@ -126,6 +126,9 @@ void IOUtils::writeRoadsReport(std::ofstream& correctRoadsOutputStream, std::ofs
     std::ofstream& fakeRoadsOutputStream, const std::vector<std::vector<Road>>& roads,
     const std::unordered_map<int, Label>& labelsMap)
 {
+	int FakeCount=0;
+	int CorrectCount=0;
+	int DuplicateCount=0;
   const int numVertices { static_cast<int>(roads.size()) };
   std::unordered_set<int> foundMonteCarloIds { };
 
@@ -150,23 +153,27 @@ void IOUtils::writeRoadsReport(std::ofstream& correctRoadsOutputStream, std::ofs
       const Label& currentLabel { labelsMap.at(currentRoadLabel) };
 
       if (currentRoad.isFakeRoad()) {
-
+    	  FakeCount++;
         fakeRoadsOutputStream << currentLabel << std::endl;
 
       } else {
 
         if (foundMonteCarloIds.count(currentLabel.monteCarloId)) {
-
+        	DuplicateCount++;
           duplicateRoadsOutputStream << currentLabel << std::endl;
 
         } else {
-
+        	CorrectCount++;
           correctRoadsOutputStream << currentLabel << std::endl;
           foundMonteCarloIds.emplace(currentLabel.monteCarloId);
         }
       }
     }
   }
+  correctRoadsOutputStream << "\nTotal correct roads = "<<CorrectCount << "\n"<<std::endl;
+  duplicateRoadsOutputStream << "\nTotal duplicate roads = "<<DuplicateCount << "\n"<< std::endl;
+  fakeRoadsOutputStream << "\nTotal fake roads = "<<FakeCount << "\n"<< std::endl;
+
 }
 
 }

@@ -97,11 +97,12 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 			  const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
 			  mClusters[iLayer].emplace_back(iLayer, event.getPrimaryVertex(primaryVertexIndex), currentCluster);
 			}
+			std::sort(mClusters[iLayer].begin(), mClusters[iLayer].end(), [](Cluster& cluster1, Cluster& cluster2) {
+			  return cluster1.indexTableBinIndex < cluster2.indexTableBinIndex;
+			});
 
 			if(openClPrimaryVertexContext.mClusters[iLayer]!=NULL)
 				free(openClPrimaryVertexContext.mClusters[iLayer]);
-
-			//check if size of clusters is multiple of page size, otherwise extend clusters with 0 value
 
 			int clusterSize=clustersNum*sizeof(ClusterStruct);
 
