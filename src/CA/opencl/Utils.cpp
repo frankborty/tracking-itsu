@@ -114,7 +114,7 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 		std::vector<cl::Device> oclDeviceList;
 		oclDeviceList.push_back(oclDevice);
 		char buildOption[100];
-		sprintf(buildOption,"-cl-std=CL2.0");
+		sprintf(buildOption,""/*"-cl-std=CL2.0"*/);
 		//std::cout<<"kernel option "<<buildOption<<std::endl;
 		program.build(oclDeviceList,buildOption);
 		kernel=cl::Kernel(program,kernelName);

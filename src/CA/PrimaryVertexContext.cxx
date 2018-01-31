@@ -237,9 +237,14 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 
 		    //tracklets lookup
 		    if(iLayer < Constants::ITS::CellsPerRoad) {
+		    	int workgroupSize=5*32;
 		    	if(openClPrimaryVertexContext.mTrackletsLookupTable[iLayer]!=NULL)
 		    		free(openClPrimaryVertexContext.mTrackletsLookupTable[iLayer]);
 		    	int size=event.getLayer(iLayer + 1).getClustersSize()*sizeof(int);
+				/*if((size % workgroupSize)!=0){
+					int mult=size/workgroupSize;
+					size=(mult+1)*workgroupSize;
+				}*/
 		      	int lookUpSize=size;
 				int factor=lookUpSize%64;
 				if(factor!=0){

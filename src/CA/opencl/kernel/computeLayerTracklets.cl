@@ -178,12 +178,11 @@ __kernel void countLayerTracklets(
 	int clusterTrackletsNum=0;
 	int iLayer=*iCurrentLayer;
 	
-		//printf("pippo=%d\n",currentClusterIndex);
+	
 	int currentLayerClusterVectorSize=iLayerClusterSize[iLayer];
 	int nextLayerClusterVectorSize=iLayerClusterSize[iLayer+1];
 
-	//if(currentClusterIndex==0)
-		//printf("%d %d %d\n",iLayer,currentLayerClusterVectorSize,nextLayerClusterVectorSize);
+	
 	if(currentClusterIndex<currentLayerClusterVectorSize){
 		__global ClusterStruct *currentCluster=&currentLayerClusters[currentClusterIndex];
 		
@@ -204,8 +203,6 @@ __kernel void countLayerTracklets(
 		    	  const int firstBinIndex=getBinIndex(selectedBinsRect.x,iPhiBin);
 		    	  const int firstRowClusterIndex = currentLayerIndexTable[firstBinIndex];
 		    	  const int maxRowClusterIndex = currentLayerIndexTable[firstBinIndex+ selectedBinsRect.z - selectedBinsRect.x + 1 ];
-				  //if(iLayer==0)
-					  //printf("%d %d\n",firstRowClusterIndex,nextLayerClustersNum);
 				  for (int iNextLayerCluster=firstRowClusterIndex;iNextLayerCluster <= maxRowClusterIndex && iNextLayerCluster < nextLayerClustersNum; ++iNextLayerCluster) {
 		    		
 		    		  __global ClusterStruct *nextCluster=&nextLayerClusters[iNextLayerCluster];
@@ -215,13 +212,6 @@ __kernel void countLayerTracklets(
 
 		    		  if (deltaZ < TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || myAbs(deltaPhi-TwoPi)<PhiCoordinateCut)){
 		    			  int iTrackletPosition=atom_inc(&iCurrentTrackletsPosition[iLayer])+1;
-		    			  /*__global TrackletStruct* tracklet=&currentLayerTracklets[iTrackletPosition];
-		    			  tracklet->firstClusterIndex=currentClusterIndex;
-		    			  tracklet->secondClusterIndex=iNextLayerCluster;
-		    			  tracklet->tanLambda=(currentCluster->zCoordinate - nextCluster->zCoordinate) / (currentCluster->rCoordinate - nextCluster->rCoordinate);
-		    			  tracklet->phiCoordinate= atan2(currentCluster->yCoordinate - nextCluster->yCoordinate, currentCluster->xCoordinate - nextCluster->xCoordinate);
-						  *///if(iLayer==0)
-							//  printf("%d %d\n",tracklet->firstClusterIndex,tracklet->secondClusterIndex);
 		    			  ++clusterTrackletsNum;
 		    			  
 		    		  }
@@ -230,14 +220,11 @@ __kernel void countLayerTracklets(
 		}
 	}	
 	if(clusterTrackletsNum>0) {
-	// 	printf("iLayer = %d,\tclusterTrackletsNum = %d,\tcurrentClusterIndex = %d\n",iLayer,clusterTrackletsNum,currentClusterIndex);
 		iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = clusterTrackletsNum;
   	}
-  	else{
+ 	else{
     	iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = 0;
-  	}	
-     
-     
+  	}	   
 }
 
 

@@ -119,7 +119,7 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 
 		std::string deviceName;
 		oclDevice.getInfo(CL_DEVICE_NAME,&deviceName);
-		//std::cout<< "Device: "<<deviceName<<std::endl;
+		std::cout<< "Device: "<<deviceName<<std::endl;
 
 
 		cl::Kernel oclCountKernel=GPU::Context::getInstance().getDeviceProperties().oclCountKernel;
@@ -133,6 +133,12 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 		}
 		//clustersNum=primaryVertexContext.getClusters()[0].size();
 		clustersNum=primaryVertexContext.openClPrimaryVertexContext.iClusterSize[0];
+
+		if((clustersNum % workgroupSize)!=0){
+			int mult=clustersNum/workgroupSize;
+			clustersNum=(mult+1)*workgroupSize;
+		}
+
 
 		firstLayerLookUpTable=(int*)malloc(clustersNum*sizeof(int));
 		memset(firstLayerLookUpTable,-1,clustersNum*sizeof(int));
@@ -173,11 +179,13 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				oclCountKernel.setArg(7, primaryVertexContext.openClPrimaryVertexContext.bTrackletsLookupTable[iLayer-1]);
 
 			int pseudoClusterNumber=clustersNum;
+
+			/*//TO BE IMPLEMENTED: bTrackletsLookupTable allocazione size must be fixed
 			if((clustersNum % workgroupSize)!=0){
 				int mult=clustersNum/workgroupSize;
 				pseudoClusterNumber=(mult+1)*workgroupSize;
 			}
-
+		 */
 //			time_t tx=clock();
 			oclCommandqueues[iLayer].enqueueNDRangeKernel(
 				oclCountKernel,
