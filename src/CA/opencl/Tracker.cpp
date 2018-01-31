@@ -191,8 +191,8 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
 				oclCountKernel,
 				cl::NullRange,
 				cl::NDRange(pseudoClusterNumber),
-				cl::NDRange(workgroupSize));
-				//cl::NullRange);
+				//cl::NDRange(workgroupSize));
+				cl::NullRange);
 
 #ifdef PRINT_EXECUTION_TIME
 			time_t ty=clock();

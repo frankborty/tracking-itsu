@@ -32,7 +32,7 @@ std::string getDirectory(const std::string& fname)
 
 int main(int argc, char** argv)
 {
-
+std::cout<<"prova"<<std::endl;
 #if TRACKINGITSU_CUDA_MODE
 	std::cout << ">> CUDA MODE"<< std::endl;
 #elif TRACKINGITSU_OCL_MODE
