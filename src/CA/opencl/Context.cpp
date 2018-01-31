@@ -54,6 +54,7 @@ Context::Context()
 	std::string info;
 	std::size_t iPlatformList;
 	std::size_t iTotalDevice=0;
+	int scelta=0;
 
 	try{
 
@@ -160,7 +161,12 @@ Context::Context()
 
 			//std::cout << std::endl;
 		}
-
+		std::cout<<"total Device: "<<iTotalDevice<<std::endl;
+		for(int j=0;j<iTotalDevice;j++){
+			std::cout<<"["<<j<<"]"<<mDeviceProperties[j].name<<std::endl;
+		}
+		std::cout<<"Choose device:";
+		std::cin>>scelta;
 
 	}
 	catch(const cl::Error &err){
@@ -168,7 +174,7 @@ Context::Context()
 		throw std::runtime_error { errString };
 	}
 
-	iCurrentDevice=1;
+	iCurrentDevice=scelta;
 
 
 
