@@ -31,10 +31,10 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -G; -g; -O2; -DDEBUG;)
 	endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-
-	if(CMAKE_BUILD_TYPE STREQUAL "Release")
+	
+	if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "TimeBenchmark")
 	    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -O3; --use_fast_math;)
-	endif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	endif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "TimeBenchmark")
 
 	if(CMAKE_BUILD_TYPE STREQUAL "Profile")
 	    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -lineinfo)
@@ -80,20 +80,16 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 else(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
 if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
-  LIST(APPEND SRCS
-    CA/opencl/Context.cpp
-    CA/opencl/PrimaryVertexContext.cpp
-    CA/opencl/Stream.cpp
-    CA/opencl/Utils.cpp
-    CA/opencl/Tracker.cpp
-  )
-
-configure_file(CA/opencl/kernel/computeLayerTracklets.cl ${CMAKE_CURRENT_BINARY_DIR}/kernel/computeLayerTracklets.cl COPYONLY)
-configure_file(CA/opencl/kernel/computeLayerCells.cl ${CMAKE_CURRENT_BINARY_DIR}/kernel/computeLayerCells.cl COPYONLY)
-configure_file(CA/opencl/kernel/SortKernels.cl ${CMAKE_CURRENT_BINARY_DIR}/kernel/SortKernels.cl COPYONLY)
-include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/src/CA/opencl/kernel)
+	LIST(APPEND SRCS
+		CA/openCl/Context.cpp
+		CA/openCl/Utils.cpp
+		CA/openCl/PrimaryVertexContext.cpp
+		CA/openCl/Tracker.cpp
+	)
+	configure_file(CA/openCl/kernel/computeLayerTracklets.cl ${CMAKE_CURRENT_BINARY_DIR}/kernel/computeLayerTracklets.cl COPYONLY)
+	configure_file(CA/openCl/kernel/computeLayerCells.cl ${CMAKE_CURRENT_BINARY_DIR}/kernel/computeLayerCells.cl COPYONLY)
+	include_directories( ${OPENCL_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/src/CA/openCl/kernel)
 
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
-
 	add_library(${MODULE} ${SRCS})
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)

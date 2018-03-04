@@ -17,21 +17,9 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include "ITSReconstruction/CA/Definitions.h"
-#include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
-#include "ITSReconstruction/CA/PrimaryVertexContext.h"
-
-#if TRACKINGITSU_OCL_MODE
-	#include <stdio.h>
-	#include <sstream>
-	#include <stdexcept>
-	#include <iomanip>
-	#include <iostream>
-	#include <limits>
-	#include <fstream>
-	#include <vector>
-	//#include <CL/cl.hpp>
-#endif
+#include "ITSReconstruction/CA/Constants.h"
 
 namespace o2
 {
@@ -44,40 +32,44 @@ namespace GPU
 
 struct DeviceProperties final
 {
-    std::string name;
-    long globalMemorySize;
-    int warpSize;
-
 #if TRACKINGITSU_CUDA_MODE
+    std::string name;
     int gpuProcessors;
     int cudaCores;
+    long globalMemorySize;
     long constantMemorySize;
     long sharedMemorySize;
     long maxClockRate;
     int busWidth;
     long l2CacheSize;
     long registersPerBlock;
+    int warpSize;
     int maxThreadsPerBlock;
     int maxBlocksPerSM;
     dim3 maxThreadsDim;
     dim3 maxGridDim;
+#else
+    std::string name;
+        long globalMemorySize;
+        int warpSize;
 
-#elif TRACKINGITSU_OCL_MODE
-    std::string vendor;
-    std::size_t maxComputeUnits;
-    std::size_t maxWorkGroupSize;
-    std::size_t maxWorkItemDimension;
-	dim3 maxWorkItemSize;
-    cl::Context oclContext;
-    cl::Device oclDevice;
-    cl::Device oclCpuDevice;
-    cl::CommandQueue oclQueue;
+        std::string vendor;
+        std::size_t maxComputeUnits;
+        std::size_t maxWorkGroupSize;
+        std::size_t maxWorkItemDimension;
+        cl::Context oclContext;
+        cl::Device  oclDevice;
 
-    //kernel
-    cl::Kernel oclCountKernel;
-    cl::Kernel oclComputeKernel;
-    cl::Kernel oclTestKernel;
 
+        //kernel
+        cl::Kernel oclCountTrackletKernel;
+        cl::Kernel oclComputeTrackletKernel;
+        cl::Kernel oclCountCellKernel;
+        cl::Kernel oclComputeCellKernel;
+
+        //command queues
+        cl::CommandQueue oclQueue;
+        cl::CommandQueue oclCommandQueues[Constants::ITS::TrackletsPerRoad];
 #endif
 };
 
@@ -92,12 +84,11 @@ class Context final
     const DeviceProperties& getDeviceProperties();
     const DeviceProperties& getDeviceProperties(const int);
 
-
   private:
     Context();
     ~Context() = default;
 
-#if TRACKINGITSU_OCL_MODE
+#ifdef TRACKINGITSU_OCL_MODE
     int iCurrentDevice;
 #endif
     int mDevicesNum;

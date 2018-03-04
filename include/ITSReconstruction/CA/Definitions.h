@@ -23,13 +23,6 @@
 # define TRACKINGITSU_GPU_MODE false
 #endif
 
-#if defined (INCLUDE_CLOGS)
-#define CLOGS true
-#else
-#define CLOGS false
-#endif
-
-
 #if defined(TRACKINGITSU_OPEN_CL_COMPILE)
 #define __CL_ENABLE_EXCEPTIONS //enable exceptions
 #include <CL/cl.hpp>
@@ -39,7 +32,6 @@
 # define TRACKINGITSU_OCL_MODE false
 # define TRACKINGITSU_CUDA_MODE true
 #endif
-
 
 
 #if defined(__CUDACC__)
@@ -96,8 +88,8 @@ typedef struct _float4 { float x, y, z, w; } float4;
 template<typename T, std::size_t Size>
 using GPUArray = std::array<T, Size>;
 
-
 typedef struct _dummyStream {} GPUStream;
+
 
 
 #endif

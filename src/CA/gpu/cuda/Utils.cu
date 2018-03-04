@@ -19,6 +19,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
+#include <cooperative_groups.h>
 
 #include "ITSReconstruction/CA/gpu/Context.h"
 
@@ -176,7 +177,8 @@ GPU_DEVICE int Utils::Device::getLaneIndex()
 
 GPU_DEVICE int Utils::Device::shareToWarp(const int value, const int laneIndex)
 {
-  return __shfl(value, laneIndex);
+  cooperative_groups::coalesced_group threadGroup = cooperative_groups::coalesced_threads();
+  return threadGroup.shfl(value, laneIndex);
 }
 
 GPU_DEVICE int Utils::Device::gpuAtomicAdd(int *p, const int incrementSize)

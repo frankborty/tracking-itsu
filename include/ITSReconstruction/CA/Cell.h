@@ -32,8 +32,6 @@ class Cell
   {
     public:
       GPU_DEVICE Cell(const int, const int, const int, const int, const int, const float3&, const float);
-      GPU_DEVICE Cell(const int, const int, const int, const int, const int, const float, const float, const float, const float);
-
 
       int getFirstClusterIndex() const;
       int getSecondClusterIndex() const;
@@ -45,8 +43,7 @@ class Cell
       const float3& getNormalVectorCoordinates() const;
       void setLevel(const int level);
 
-  //  private:
-    public:
+    private:
       const int mFirstClusterIndex;
       const int mSecondClusterIndex;
       const int mThirdClusterIndex;

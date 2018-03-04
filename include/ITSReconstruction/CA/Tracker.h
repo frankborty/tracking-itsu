@@ -72,8 +72,8 @@ class Tracker: private TrackerTraits<IsGPU>
     void computeMontecarloLabels();
 
   private:
-    void evaluateTask(void (Tracker<IsGPU>::*)(void), const char*);
-    void evaluateTask(void (Tracker<IsGPU>::*)(void), const char*, std::ostream&);
+    float evaluateTask(void (Tracker<IsGPU>::*)(void), const char*);
+    float evaluateTask(void (Tracker<IsGPU>::*)(void), const char*, std::ostream&);
 
     PrimaryVertexContext mPrimaryVertexContext;
 };

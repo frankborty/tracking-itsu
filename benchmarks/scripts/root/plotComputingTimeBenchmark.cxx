@@ -26,6 +26,7 @@ void compileData(const std::string &inputFolder, std::map<std::string, std::arra
     float meanValue, minValue, maxValue;
 
     std::getline(inputStream, line);
+    std::getline(inputStream, line);
     inputStringStream = std::istringstream { line };
     inputStringStream >> meanValue >> minValue >> maxValue;
     inputDataMap["TrackletsMean"][iSample] = meanValue;

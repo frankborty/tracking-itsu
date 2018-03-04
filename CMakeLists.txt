@@ -5,8 +5,6 @@ include(CheckIncludeFileCXX)
 
 set(TRACKINGITSU_TARGET_DEVICE CPU CACHE STRING "Target device where code must be run. Options are: CPU (default), GPU_CUDA, OPEN_CL")
 set_property(CACHE TRACKINGITSU_TARGET_DEVICE PROPERTY STRINGS CPU GPU_CUDA OPEN_CL)
-set(USE_CLOGS NOT CACHE STRING "Include Clogs library to perform scan phase of traclets founding. Options are: NOT (default), YES ")
-set_property(CACHE USE_CLOGS PROPERTY STRINGS YES NOT)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -g -O0")
@@ -30,37 +28,28 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
     add_definitions(-DTRACKINGITSU_CUDA_COMPILE)
 
-    include_directories(${TRACKING-ITSU_SOURCE_DIR}/include/ITSReconstruction/CA/gpu)
+    include_directories(${TRACKING-ITSU_SOURCE_DIR}/include/gpu)
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL GPU_CUDA)
 
 if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
-
-if(USE_CLOGS STREQUAL YES)
-add_definitions(-DINCLUDE_CLOGS)
-endif(USE_CLOGS STREQUAL YES)
-
-#if(USE_CLOGS STREQUAL NOT)
-add_definitions(-DTRACKINGITSU_OPEN_CL_COMPILE )
-#endif(USE_CLOGS STREQUAL NOT)
+	add_definitions(-DTRACKINGITSU_OPEN_CL_COMPILE )
+	find_package( OpenCL REQUIRED )
+	include_directories( ${OpenCl_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/include/ITSReconstruction/CA/openCl ${TRACKING-ITSU_SOURCE_DIR}/src)
 
 
-#add_definitions(-DTRACKINGITSU_OPEN_CL_COMPILE -DOCL_DEVICE_TARGET)
-find_package( OpenCL REQUIRED )
-include_directories( ${OpenCl_INCLUDE_DIRS} ${TRACKING-ITSU_SOURCE_DIR}/include/ITSReconstruction/CA/gpu ${TRACKING-ITSU_SOURCE_DIR}/src)
+	find_package(Boost REQUIRED)
+	include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+	message(${Boost_INCLUDE_DIRS})
 
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
-
+	
 include_directories(${TRACKING-ITSU_SOURCE_DIR}/include)
 add_subdirectory(src)
 
 add_executable(tracking-itsu-main main.cpp)
 
 if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
-target_link_libraries(tracking-itsu-main src ${OpenCL_LIBRARIES})
-	if(USE_CLOGS STREQUAL YES)
-	target_link_libraries(tracking-itsu-main src /opt/clogs/usr/local/lib/libclogs.so)
-	endif(USE_CLOGS STREQUAL YES)
+	target_link_libraries(tracking-itsu-main src ${OpenCL_LIBRARIES})
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
-
 
 target_link_libraries(tracking-itsu-main src)

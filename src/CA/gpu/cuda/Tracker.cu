@@ -19,8 +19,9 @@
 #include <iostream>
 
 #include <cuda_runtime.h>
+#include <cooperative_groups.h>
 
-#include "external/cub/cub.cuh"
+#include "cub/cub.cuh"
 
 #include "ITSReconstruction/CA/Constants.h"
 #include "ITSReconstruction/CA/IndexTableUtils.h"
@@ -96,18 +97,15 @@ __device__ void computeLayerTracklets(PrimaryVertexContext &primaryVertexContext
               && (deltaPhi < Constants::Thresholds::PhiCoordinateCut
                   || MATH_ABS(deltaPhi - Constants::Math::TwoPi) < Constants::Thresholds::PhiCoordinateCut)) {
 
-            int mask { static_cast<int>(__ballot(1)) };
-            int leader { __ffs(mask) - 1 };
-            int laneIndex { Utils::Device::getLaneIndex() };
-            int currentIndex { };
+        	  cooperative_groups::coalesced_group threadGroup = cooperative_groups::coalesced_threads();
+			  int currentIndex { };
 
-            if (laneIndex == leader) {
+			  if (threadGroup.thread_rank() == 0) {
 
-              currentIndex = trackletsVector.extend(__popc(mask));
-            }
+				currentIndex = trackletsVector.extend(threadGroup.size());
+			  }
 
-            currentIndex = Utils::Device::shareToWarp(currentIndex, leader)
-                + __popc(mask & ((1 << laneIndex) - 1));
+			  currentIndex = threadGroup.shfl(currentIndex, 0) + threadGroup.thread_rank();
 
             trackletsVector.emplace(currentIndex, currentClusterIndex, iNextLayerCluster, currentCluster, nextCluster);
             ++clusterTrackletsNum;
@@ -208,18 +206,15 @@ __device__ void computeLayerCells(PrimaryVertexContext& primaryVertexContext, co
               if (distanceOfClosestApproach
                   <= Constants::Thresholds::CellMaxDistanceOfClosestApproachThreshold()[layerIndex]) {
 
-                int mask { static_cast<int>(__ballot(1)) };
-                int leader { __ffs(mask) - 1 };
-                int laneIndex { Utils::Device::getLaneIndex() };
+            	cooperative_groups::coalesced_group threadGroup = cooperative_groups::coalesced_threads();
                 int currentIndex { };
 
-                if (laneIndex == leader) {
+                if (threadGroup.thread_rank() == 0) {
 
-                  currentIndex = cellsVector.extend(__popc(mask));
+                  currentIndex = cellsVector.extend(threadGroup.size());
                 }
 
-                currentIndex = Utils::Device::shareToWarp(currentIndex, leader)
-                    + __popc(mask & ((1 << laneIndex) - 1));
+                currentIndex = threadGroup.shfl(currentIndex, 0) + threadGroup.thread_rank();
 
                 cellsVector.emplace(currentIndex, currentTracklet.firstClusterIndex,
                     nextTracklet.firstClusterIndex, nextTracklet.secondClusterIndex, currentTrackletIndex,
@@ -297,8 +292,8 @@ void TrackerTraits<true>::computeLayerTracklets(CA::PrimaryVertexContext& primar
   for (int iLayer { 0 }; iLayer < Constants::ITS::CellsPerRoad; ++iLayer) {
 
     tempSize[iLayer] = 0;
-    const int trackletsNum { static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()) };
-    primaryVertexContext.getTempTrackletArray()[iLayer].reset(trackletsNum);
+    primaryVertexContext.getTempTrackletArray()[iLayer].reset(
+		static_cast<int>(primaryVertexContext.getDeviceTracklets()[iLayer + 1].capacity()));
 
     cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],
         primaryVertexContext.getDeviceTrackletsPerClustersTable()[iLayer].get(),
@@ -383,8 +378,8 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 
     tempSize[iLayer] = 0;
     trackletsNum[iLayer] = primaryVertexContext.getDeviceTracklets()[iLayer + 1].getSizeFromDevice();
-    const int cellsNum { static_cast<int>(primaryVertexContext.getDeviceCells()[iLayer + 1].capacity()) };
-    primaryVertexContext.getTempCellArray()[iLayer].reset(cellsNum);
+    primaryVertexContext.getTempCellArray()[iLayer].reset(
+		static_cast<int>(primaryVertexContext.getDeviceCells()[iLayer + 1].capacity()));
 
     cub::DeviceScan::ExclusiveSum(static_cast<void *>(NULL), tempSize[iLayer],
         primaryVertexContext.getDeviceCellsPerTrackletTable()[iLayer].get(),

@@ -16,7 +16,7 @@
 #define TRAKINGITSU_INCLUDE_GPU_CAGPUUNIQUE_POINTER_H_
 
 #include "ITSReconstruction/CA/gpu/Utils.h"
-#include <iostream>
+
 namespace o2
 {
 namespace ITS
@@ -76,7 +76,6 @@ UniquePointer<T>::UniquePointer()
     : mDevicePointer { nullptr }
 {
   // Nothing to do
-	std::cout<<"UniquePointer()"<<std::endl;
 }
 
 template<typename T>

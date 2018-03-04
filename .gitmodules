@@ -1,3 +1,0 @@
-[submodule "include/external/cub"]
-	path = include/ITSReconstruction/CA/external/cub
-	url = https://github.com/NVlabs/cub.git

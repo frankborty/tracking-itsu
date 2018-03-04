@@ -17,7 +17,6 @@
 
 #include "ITSReconstruction/CA/Definitions.h"
 
-
 namespace o2
 {
 namespace ITS
@@ -40,7 +39,6 @@ class Stream
       const GPUStream& get() const;
 
     private:
-
       GPUStream mStream;
   };
 
