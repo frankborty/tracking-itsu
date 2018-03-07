@@ -87,10 +87,10 @@ void TrackerTraits<false>::computeLayerTracklets(PrimaryVertexContext& primaryVe
         const int firstRowClusterIndex = primaryVertexContext.getIndexTables()[iLayer][firstBinIndex];
         const int maxRowClusterIndex = primaryVertexContext.getIndexTables()[iLayer][maxBinIndex];
 
-        for (int iNextLayerCluster { firstRowClusterIndex }; iNextLayerCluster <= maxRowClusterIndex;	//forse basta togliere  "=" al maxRowClusterIndex
+        for (int iNextLayerCluster { firstRowClusterIndex }; iNextLayerCluster < maxRowClusterIndex;	//forse basta togliere  "=" al maxRowClusterIndex
             ++iNextLayerCluster) {
-        	if(iNextLayerCluster >= (int)primaryVertexContext.getClusters()[iLayer+1].size())
-        		break;
+        	/*if(iNextLayerCluster >= (int)primaryVertexContext.getClusters()[iLayer+1].size())
+        		break;*/
         	const Cluster& nextCluster { primaryVertexContext.getClusters()[iLayer + 1][iNextLayerCluster] };
 
           const float deltaZ { MATH_ABS(
@@ -249,7 +249,6 @@ Tracker<IsGPU>::Tracker()
 template<bool IsGPU>
 std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& event)
 {
-	time_t t1,t2;
   const int verticesNum { event.getPrimaryVerticesNum() };
   std::vector<std::vector<Road>> roads { };
   roads.reserve(verticesNum);
@@ -258,14 +257,6 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracks(const Event& eve
     mPrimaryVertexContext.initialize(event, iVertex);
 
 	computeTracklets();
-	int tot=0,part;
-	for(int i=5;i<6;i++){
-		part=mPrimaryVertexContext.getTracklets()[i].size();
-		std::cout<<"["<<i<<"]: "<<part<<std::endl;
-		tot+=part;
-	}
-	std::cout<<"Total track: "<<tot<<"\n"<<std::endl;
-
 	computeCells();
     findCellsNeighbours();
     findTracks();
@@ -297,11 +288,6 @@ std::vector<std::vector<Road>> Tracker<IsGPU>::clustersToTracksVerbose(const Eve
     std::cout << std::setw(2) << " - Context initialized in: " << diff << "ms" << std::endl;
 
     evaluateTask(&Tracker<IsGPU>::computeTracklets, "Tracklets Finding");
-    int tot=0,part;
-    	for(int i=0;i<6;i++){
-    		part=mPrimaryVertexContext.getCells()[i].size();
-    		tot+=part;
-    	}
     evaluateTask(&Tracker<IsGPU>::computeCells, "Cells Finding");
     evaluateTask(&Tracker<IsGPU>::findCellsNeighbours, "Neighbours Finding");
     evaluateTask(&Tracker<IsGPU>::findTracks, "Tracks Finding");

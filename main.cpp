@@ -28,6 +28,15 @@ std::string getDirectory(const std::string& fname)
 
 int main(int argc, char** argv)
 {
+#if TRACKINGITSU_CUDA_MODE
+	std::cout<<">> CUDA"<<std::endl;
+#elif TRACKINGITSU_OCL_MODE
+	std::cout<<">> OpenCl"<<std::endl;
+#else
+	std::cout<<">> CPU"<<std::endl;
+#endif
+
+
   if (argv[1] == NULL) {
 
     std::cerr << "Please, provide a data file." << std::endl;
