@@ -1,14 +1,21 @@
-#include <iomanip>
+#include <ITSReconstruction/CA/Definitions.h>
+#include <ITSReconstruction/CA/Event.h>
+#include <ITSReconstruction/CA/IOUtils.h>
+#include <ITSReconstruction/CA/Label.h>
+#include <ITSReconstruction/CA/Road.h>
+#include <ITSReconstruction/CA/Tracker.h>
+#include <stddef.h>
+#include <sys/time.h>
+#include <chrono>
+#include <cstdlib>
+#include <ctime>
+#include <exception>
+#include <fstream>
 #include <iostream>
 #include <limits>
-#include <fstream>
+#include <string>
+#include <unordered_map>
 #include <vector>
-
-#include "ITSReconstruction/CA/Definitions.h"
-#include "ITSReconstruction/CA/IOUtils.h"
-#include "ITSReconstruction/CA/Tracker.h"
-
-
 
 #if defined HAVE_VALGRIND
 # include <valgrind/callgrind.h>
@@ -72,6 +79,8 @@ int main(int argc, char** argv)
   }
 
   clock_t t1, t2;
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+
   float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
 #if defined MEMORY_BENCHMARK
   std::ofstream memoryBenchmarkOutputStream;
@@ -93,7 +102,7 @@ int main(int argc, char** argv)
 
     Event& currentEvent = events[iEvent];
     std::cout << "Processing event " << iEvent + 1 << std::endl;
-
+    start = std::chrono::system_clock::now();
     t1 = clock();
 
 #if defined HAVE_VALGRIND
@@ -117,6 +126,8 @@ int main(int argc, char** argv)
 #endif
 
       t2 = clock();
+      end = std::chrono::system_clock::now();
+      int elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
       const float diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 
       totalTime += diff;
@@ -130,8 +141,7 @@ int main(int argc, char** argv)
 
         std::cout << "Found " << roads[iVertex].size() << " roads for vertex " << iVertex + 1 << std::endl;
       }
-
-      std::cout << "Event " << iEvent + 1 << " processed in: " << diff << "ms" << std::endl;
+      std::cout << "Event " << iEvent + 1 << " processed in: " << elapsed_seconds << "ms"<< std::endl;
 
       if(currentEvent.getPrimaryVerticesNum() > 1) {
 
