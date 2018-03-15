@@ -198,6 +198,8 @@ __kernel void countLayerTracklets(
 				  
 
 				  for (int iNextLayerCluster=firstRowClusterIndex;iNextLayerCluster <= maxRowClusterIndex && iNextLayerCluster < nextLayerClustersNum; ++iNextLayerCluster) {
+		    			if(iNextLayerCluster>=nextLayerClusterVectorSize)
+		    				break;
 		    		
 		    		  __global ClusterStruct *nextCluster=&nextLayerClusters[iNextLayerCluster];
 		    		  	
@@ -283,7 +285,8 @@ __kernel void computeLayerTracklets(
 				  
 
 				  for (int iNextLayerCluster=firstRowClusterIndex;iNextLayerCluster <= maxRowClusterIndex && iNextLayerCluster < nextLayerClustersNum; ++iNextLayerCluster) {
-		    		
+		    		if(iNextLayerCluster>=nextLayerClusterVectorSize)
+		    				break;
 		    		  __global ClusterStruct *nextCluster=&nextLayerClusters[iNextLayerCluster];
 		    		  	
 		    		  const float deltaZ=fabs(tanLambda * (nextCluster->rCoordinate - currentCluster->rCoordinate) + currentCluster->zCoordinate - nextCluster->zCoordinate);

@@ -18,6 +18,7 @@
 #include <ITSReconstruction/CA/Cell.h>
 #include <ITSReconstruction/CA/Constants.h>
 #include <ITSReconstruction/CA/Tracker.h>
+#include <ITSReconstruction/CA/TrackingUtils.h>
 #include <sys/time.h>
 #include <chrono>
 #include <vector>
