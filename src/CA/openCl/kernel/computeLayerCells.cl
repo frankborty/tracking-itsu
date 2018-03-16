@@ -155,8 +155,7 @@ __kernel void countLayerCells(
 		__global ClusterStruct* nextLayerClusters,		//6
 		__global ClusterStruct* next2LayerClusters,		//7
 		__global int* currentLayerTrackletsLookupTable, //8
-		__global int * iCellsPerTrackletPreviousLayer, 	//9
-		__global int * iCurrentCellCounter //10 store the total number of cell found 
+		__global int * iCellsPerTrackletPreviousLayer 	//9
 )
 {	
 	const int currentTrackletIndex=get_global_id(0);
@@ -262,7 +261,6 @@ __kernel void countLayerCells(
 
 
 						if (distanceOfClosestApproach	<= CellMaxDistanceOfClosestApproachThreshold[iLayer]) {
-							atom_inc(&iCurrentCellCounter[iLayer]);
 							++trackletCellsNum;		
 							
 						}

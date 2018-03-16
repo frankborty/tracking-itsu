@@ -127,12 +127,12 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 
 			int CellsLookupTableSize=cellsLookupTableMemorySize*sizeof(int);
 			mGPUContext.iCellsLookupTableSize[iLayer]=cellsLookupTableMemorySize;
-			mGPUContext.iCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize);
+			mGPUContext.iCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize+sizeof(int));
 
 			mGPUContext.bCellsLookupTable[iLayer]=cl::Buffer(
 				oclContext,
 				(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-				CellsLookupTableSize,
+				CellsLookupTableSize+sizeof(int),
 				(void *) mGPUContext.iCellsLookupTable[iLayer]);
 
 			if(iLayer < Constants::ITS::CellsPerRoad - 1) {

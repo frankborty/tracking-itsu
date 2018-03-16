@@ -214,7 +214,7 @@ __kernel void computeLayerTracklets(
 				__global int * currentLayerIndexTable, //3
 				__global TrackletStruct* currentLayerTracklets, //4
 				__global int * iCurrentLayer, //5
-				__global int * iCurrentTrackletsPosition, //6
+				//__global int * iCurrentTrackletsPosition, //6
 				__global int * iLayerClusterSize, //7
 				__global int * iTrackletsPerClusterTablePreviousLayer //8
 		)				
