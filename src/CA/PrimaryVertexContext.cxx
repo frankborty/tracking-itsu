@@ -85,12 +85,11 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 
 
 		for (int iCluster { 0 }; iCluster < clustersNum; ++iCluster) {
-			const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
+			//const Cluster& currentCluster { currentLayer.getCluster(iCluster) };
+			const Cluster& currentCluster=mClusters[iLayer][iCluster];
 			mGPUContext.addClusters(mPrimaryVertex,currentCluster,iLayer,iCluster);
 
 		}
-
-		mGPUContext.sortClusters(iLayer);
 
 		mGPUContext.bClusters[iLayer]=cl::Buffer(
 			oclContext,
