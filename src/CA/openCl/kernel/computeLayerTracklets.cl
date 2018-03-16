@@ -135,9 +135,8 @@ __kernel void countLayerTracklets(
 				__global ClusterStruct* nextLayerClusters, //2
 				__global int * currentLayerIndexTable, //3
 				__global int * iCurrentLayer, //4
-				__global int * iCurrentTrackletsPosition, //5
-				__global int * iLayerClusterSize, //6
-				__global int * iTrackletsPerClusterTablePreviousLayer //7
+				__global int * iLayerClusterSize, //5
+				__global int * iTrackletsPerClusterTablePreviousLayer //6
 		)
 					
 {
@@ -191,7 +190,6 @@ __kernel void countLayerTracklets(
 		    		  const float deltaPhi=fabs(currentCluster.phiCoordinate - nextCluster.phiCoordinate);
 
 		    		  if (deltaZ < TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || fabs(deltaPhi-TwoPi)<PhiCoordinateCut)){
-		    			  int iTrackletPosition=atom_inc(&iCurrentTrackletsPosition[iLayer])+1;
 		    			  ++clusterTrackletsNum;
 		    			  
 		    		  }
@@ -202,9 +200,6 @@ __kernel void countLayerTracklets(
 
 	if(clusterTrackletsNum>0) {
 		iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = clusterTrackletsNum;
-  	}
-  	else{
-    	iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = 0;
   	}	
 }
 
