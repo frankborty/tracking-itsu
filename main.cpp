@@ -23,6 +23,8 @@
 # include <valgrind/callgrind.h>
 #endif
 
+int maxEvent,minEvent;
+
 #if TRACKINGITSU_GPU_MODE
 # include "ITSReconstruction/CA/gpu/Utils.h"
 #endif
@@ -134,10 +136,14 @@ int main(int argc, char** argv)
 
       totalTime += diff;
 
-      if (minTime > diff)
+      if (minTime > diff){
         minTime = diff;
-      if (maxTime < diff)
+        minEvent=iEvent + 1;
+      }
+      if (maxTime < diff){
         maxTime = diff;
+        maxEvent= iEvent + 1;
+      }
 
       for(int iVertex = 0; iVertex < currentEvent.getPrimaryVerticesNum(); ++iVertex) {
 
@@ -170,8 +176,8 @@ int main(int argc, char** argv)
 
   std::cout << std::endl;
   std::cout << "Avg time: " << totalTime / verticesNum << "ms" << std::endl;
-  std::cout << "Min time: " << minTime << "ms" << std::endl;
-  std::cout << "Max time: " << maxTime << "ms" << std::endl;
+  std::cout << "Min time: " << minTime << "ms\t[event #" <<minEvent << "]" << std::endl;
+  std::cout << "Max time: " << maxTime << "ms\t[event #" <<maxEvent << "]" << std::endl;
 
   return 0;
 }

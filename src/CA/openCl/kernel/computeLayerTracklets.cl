@@ -135,8 +135,9 @@ __kernel void countLayerTracklets(
 				__global ClusterStruct* nextLayerClusters, //2
 				__global int * currentLayerIndexTable, //3
 				__global int * iCurrentLayer, //4
-				__global int * iLayerClusterSize, //5
-				__global int * iTrackletsPerClusterTablePreviousLayer //6
+				//__global int * iCurrentTrackletsPosition, //5
+				__global int * iLayerClusterSize, //6
+				__global int * iTrackletsPerClusterTablePreviousLayer //7
 		)
 					
 {
@@ -190,6 +191,7 @@ __kernel void countLayerTracklets(
 		    		  const float deltaPhi=fabs(currentCluster.phiCoordinate - nextCluster.phiCoordinate);
 
 		    		  if (deltaZ < TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || fabs(deltaPhi-TwoPi)<PhiCoordinateCut)){
+		    			  //int iTrackletPosition=atom_inc(&iCurrentTrackletsPosition[iLayer])+1;
 		    			  ++clusterTrackletsNum;
 		    			  
 		    		  }
@@ -200,6 +202,9 @@ __kernel void countLayerTracklets(
 
 	if(clusterTrackletsNum>0) {
 		iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = clusterTrackletsNum;
+  	}
+  	else{
+    	iTrackletsPerClusterTablePreviousLayer[currentClusterIndex] = 0;
   	}	
 }
 
@@ -214,9 +219,8 @@ __kernel void computeLayerTracklets(
 				__global int * currentLayerIndexTable, //3
 				__global TrackletStruct* currentLayerTracklets, //4
 				__global int * iCurrentLayer, //5
-				//__global int * iCurrentTrackletsPosition, //6
-				__global int * iLayerClusterSize, //7
-				__global int * iTrackletsPerClusterTablePreviousLayer //8
+				__global int * iLayerClusterSize, //6
+				__global int * iTrackletsPerClusterTablePreviousLayer //7
 		)				
 {
 	const int currentClusterIndex=get_global_id(0);
@@ -235,10 +239,12 @@ __kernel void computeLayerTracklets(
 	}
 	
 	int currentLookUpValue=iTrackletsPerClusterTablePreviousLayer[currentClusterIndex];
-	int nextLookUpValue=iTrackletsPerClusterTablePreviousLayer[currentClusterIndex+1];
-	int numberOftrackletToFind=nextLookUpValue-currentLookUpValue;
+	int previousLookUpValue=0;
+	if(currentClusterIndex>0)
+		previousLookUpValue=iTrackletsPerClusterTablePreviousLayer[currentClusterIndex-1];
+	int numberOftrackletToFind=currentLookUpValue-previousLookUpValue;
 	
-	if(currentLookUpValue==nextLookUpValue)
+	if(numberOftrackletToFind==0)
 		return;
 	
 	if(currentClusterIndex<currentLayerClusterVectorSize){
@@ -272,14 +278,14 @@ __kernel void computeLayerTracklets(
 		    		  const float deltaPhi=fabs(currentCluster.phiCoordinate - nextCluster.phiCoordinate);
 
 		    		  if (deltaZ < TrackletMaxDeltaZThreshold[iLayer] && (deltaPhi<PhiCoordinateCut || fabs(deltaPhi-TwoPi)<PhiCoordinateCut)){
-		    			  __global TrackletStruct* tracklet=&currentLayerTracklets[currentLookUpValue];
+		    			  __global TrackletStruct* tracklet=&currentLayerTracklets[previousLookUpValue];
 		    			  
 		    			  tracklet->firstClusterIndex=currentClusterIndex;
 		    			  tracklet->secondClusterIndex=iNextLayerCluster;
 		    			  tracklet->tanLambda=(currentCluster.zCoordinate - nextCluster.zCoordinate) / (currentCluster.rCoordinate - nextCluster.rCoordinate);
 		    			  tracklet->phiCoordinate= atan2(currentCluster.yCoordinate - nextCluster.yCoordinate, currentCluster.xCoordinate - nextCluster.xCoordinate);
-						  currentLookUpValue++;
-						  if(currentLookUpValue==nextLookUpValue)
+						  previousLookUpValue++;
+						  if(currentLookUpValue==previousLookUpValue)
 						  	return;  
 		    		  }
 		    	  }

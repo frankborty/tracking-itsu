@@ -156,6 +156,7 @@ __kernel void countLayerCells(
 		__global ClusterStruct* next2LayerClusters,		//7
 		__global int* currentLayerTrackletsLookupTable, //8
 		__global int * iCellsPerTrackletPreviousLayer 	//9
+		//__global int * iCurrentCellCounter //10 store the total number of cell found 
 )
 {	
 	const int currentTrackletIndex=get_global_id(0);
@@ -170,9 +171,14 @@ __kernel void countLayerCells(
 	
 	
 	TrackletStruct currentTracklet=currentLayerTracklets[currentTrackletIndex];
+	//printf("currentTracklet: %d %d\n",currentTracklet.firstClusterIndex,currentTracklet.secondClusterIndex);
 	int nextLayerClusterIndex=currentTracklet.secondClusterIndex;
 
-	int nextLayerFirstTrackletIndex=currentLayerTrackletsLookupTable[nextLayerClusterIndex];
+	int nextLayerFirstTrackletIndex;
+	if(nextLayerClusterIndex==0)
+		nextLayerFirstTrackletIndex=0;
+	else
+		nextLayerFirstTrackletIndex=currentLayerTrackletsLookupTable[nextLayerClusterIndex-1];
 
 	int nextLayerTrackletsNum=iLayerTrackletSize[iLayer + 1];
 
@@ -261,6 +267,7 @@ __kernel void countLayerCells(
 
 
 						if (distanceOfClosestApproach	<= CellMaxDistanceOfClosestApproachThreshold[iLayer]) {
+							//atom_inc(&iCurrentCellCounter[iLayer]);
 							++trackletCellsNum;		
 							
 						}
@@ -271,6 +278,9 @@ __kernel void countLayerCells(
 			
 		if(trackletCellsNum>0) {
 			iCellsPerTrackletPreviousLayer[currentTrackletIndex] = trackletCellsNum;
+		}
+		else {
+			iCellsPerTrackletPreviousLayer[currentTrackletIndex] = 0;
 		}
 	}
 }
@@ -299,9 +309,12 @@ __kernel void computeLayerCells(
 	int trackletCellsNum = 0;
 	
 	int currentLookUpValue=iCellsPerTrackletPreviousLayer[currentTrackletIndex];
-	int nextLookUpValue=iCellsPerTrackletPreviousLayer[currentTrackletIndex+1];
-	int numberOfCellsToFind=nextLookUpValue-currentLookUpValue;
-	if(currentLookUpValue==nextLookUpValue)
+	int previousLookUpValue=0;
+	if(currentTrackletIndex!=0)
+		previousLookUpValue=iCellsPerTrackletPreviousLayer[currentTrackletIndex-1];
+	
+	int numberOfCellsToFind=currentLookUpValue-previousLookUpValue;
+	if(numberOfCellsToFind==0)
 		return;
 	
 	
@@ -309,7 +322,11 @@ __kernel void computeLayerCells(
 	TrackletStruct currentTracklet=currentLayerTracklets[currentTrackletIndex];
 	const int nextLayerClusterIndex=currentTracklet.secondClusterIndex;
 
-	const int nextLayerFirstTrackletIndex=currentLayerTrackletsLookupTable[nextLayerClusterIndex];
+	int nextLayerFirstTrackletIndex;
+	if(nextLayerClusterIndex==0)
+		nextLayerFirstTrackletIndex=0;
+	else
+		nextLayerFirstTrackletIndex=currentLayerTrackletsLookupTable[nextLayerClusterIndex-1];
 
 	const int nextLayerTrackletsNum=iLayerTrackletSize[iLayer + 1];
 
@@ -398,7 +415,7 @@ __kernel void computeLayerCells(
 
 
 						if (distanceOfClosestApproach	<= CellMaxDistanceOfClosestApproachThreshold[iLayer]) {
-							__global CellStruct* cell=&currentLayerCells[currentLookUpValue];
+							__global CellStruct* cell=&currentLayerCells[previousLookUpValue];
 							cell->mFirstClusterIndex=currentTracklet.firstClusterIndex;
 							cell->mSecondClusterIndex=currentTracklet.secondClusterIndex;
 							cell->mThirdClusterIndex=nextTracklet.secondClusterIndex;
@@ -410,8 +427,8 @@ __kernel void computeLayerCells(
 							cell->mCurvature=1.0f/cellTrajectoryRadius;
 							cell->mLevel=1;
 							
-							currentLookUpValue++;
-							if(currentLookUpValue==nextLookUpValue)
+							previousLookUpValue++;
+							if(currentLookUpValue==previousLookUpValue)
 					  			return;	
 									
 							
