@@ -25,7 +25,11 @@
 
 #if defined(TRACKINGITSU_OPEN_CL_COMPILE)
 #define __CL_ENABLE_EXCEPTIONS //enable exceptions
+#if defined(__APPLE__)
+#include <OpenCL/cl.hpp>
+#else
 #include <CL/cl.hpp>
+#endif
 # define TRACKINGITSU_OCL_MODE true
 # define TRACKINGITSU_CUDA_MODE false
 #elif(TRACKINGITSU_CUDA_COMPILE)

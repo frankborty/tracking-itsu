@@ -119,7 +119,7 @@ Context::Context()
 				}
 				else{
 					//std::cout<<">> NOT NVIDIA/AMD" << std::endl;
-					mDeviceProperties[iTotalDevice].warpSize=16;
+					mDeviceProperties[iTotalDevice].warpSize=128;
 				}
 
 
