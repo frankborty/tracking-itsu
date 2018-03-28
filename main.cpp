@@ -80,10 +80,9 @@ int main(int argc, char** argv)
     fakeRoadsOutputStream.open(benchmarkFolderName + "FakeRoads.txt");
   }
 
-  clock_t t1, t2;
   std::chrono::time_point<std::chrono::system_clock> start, end;
 
-  float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
+ int totalTime = 0, minTime = std::numeric_limits<int>::max(), maxTime = -1;
 #if defined MEMORY_BENCHMARK
   std::ofstream memoryBenchmarkOutputStream;
   memoryBenchmarkOutputStream.open(benchmarkFolderName + "MemoryOccupancy.txt");
@@ -105,7 +104,7 @@ int main(int argc, char** argv)
     Event& currentEvent = events[iEvent];
     std::cout << "Processing event " << iEvent + 1 << std::endl;
     start = std::chrono::system_clock::now();
-    t1 = clock();
+   
 
 #if defined HAVE_VALGRIND
     // Run callgrind with --collect-atstart=no
@@ -127,17 +126,17 @@ int main(int argc, char** argv)
       CALLGRIND_TOGGLE_COLLECT;
 #endif
 
-      t2 = clock();
+     
       end = std::chrono::system_clock::now();
       int elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-      const float diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
+      
 
-      totalTime += diff;
+      totalTime += elapsed_seconds;
 
-      if (minTime > diff)
-        minTime = diff;
-      if (maxTime < diff)
-        maxTime = diff;
+      if (minTime > elapsed_seconds)
+        minTime = elapsed_seconds;
+      if (maxTime < elapsed_seconds)
+        maxTime = elapsed_seconds;
 
       for(int iVertex = 0; iVertex < currentEvent.getPrimaryVerticesNum(); ++iVertex) {
 
@@ -147,7 +146,7 @@ int main(int argc, char** argv)
 
       if(currentEvent.getPrimaryVerticesNum() > 1) {
 
-        std::cout << "Vertex processing mean time: " << diff / currentEvent.getPrimaryVerticesNum() << "ms" << std::endl;
+        std::cout << "Vertex processing mean time: " << elapsed_seconds / currentEvent.getPrimaryVerticesNum() << "ms" << std::endl;
       }
 
       std::cout << std::endl;

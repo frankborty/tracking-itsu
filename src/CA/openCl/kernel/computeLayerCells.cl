@@ -75,18 +75,7 @@ __constant float CellMaxDistanceOfClosestApproachThreshold[5]= { 0.05f, 0.04f, 0
 		float phiCoordinate;
 	}TrackletStruct;
 
-	typedef struct{
-		int firstClusterIndex;
-		int secondClusterIndex;
-		float tanLambda;
-		float phiCoordinate;
-	}RoadsStruct;
-
-	typedef struct{
-		void * srPunt;
-		int size;
-	}VectStruct;
-
+	
 
 
 int getZBinIndex(int layerIndex, float zCoordinate){
