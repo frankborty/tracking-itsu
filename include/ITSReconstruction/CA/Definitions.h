@@ -15,6 +15,32 @@
 #ifndef TRACKINGITSU_INCLUDE_CADEFINITIONS_H_
 #define TRACKINGITSU_INCLUDE_CADEFINITIONS_H_
 
+#ifdef __OPENCL_C_VERSION__
+#define CONSTEXPR __constant
+#define CONST
+
+typedef struct{
+		int x;
+		int y;
+		int z;
+		int w;
+	}Int4Struct;
+
+typedef struct{
+		float x;
+		float y;
+		float z;
+	}Float3Struct;
+
+typedef struct{
+		float x;
+		float y;
+	}Float2Struct;
+
+#else
+#define CONSTEXPR constexpr
+#define CONST const
+
 #include <array>
 
 #if defined(TRACKINGITSU_CUDA_COMPILE) || defined (TRACKINGITSU_OPEN_CL_COMPILE)
@@ -94,7 +120,7 @@ using GPUArray = std::array<T, Size>;
 
 typedef struct _dummyStream {} GPUStream;
 
-
+#endif
 
 #endif
 
