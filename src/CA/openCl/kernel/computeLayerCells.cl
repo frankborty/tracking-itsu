@@ -299,9 +299,9 @@ __kernel void computeLayerCells(
 							cell->mThirdClusterIndex=nextTracklet.secondClusterIndex;
 							cell->mFirstTrackletIndex=currentTrackletIndex;
 							cell->mSecondTrackletIndex=iNextLayerTracklet;
-							cell->mNormalVectorCoordinates[0]=normalizedPlaneVector.x;
-							cell->mNormalVectorCoordinates[1]=normalizedPlaneVector.y;
-							cell->mNormalVectorCoordinates[2]=normalizedPlaneVector.z;
+							cell->mNormalVectorCoordinates.x=normalizedPlaneVector.x;
+							cell->mNormalVectorCoordinates.y=normalizedPlaneVector.y;
+							cell->mNormalVectorCoordinates.z=normalizedPlaneVector.z;
 							cell->mCurvature=1.0f/cellTrajectoryRadius;
 							cell->mLevel=1;
 							
