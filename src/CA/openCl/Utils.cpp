@@ -82,9 +82,10 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 		std::vector<cl::Device> oclDeviceList;
 		oclDeviceList.push_back(oclDevice);
 		char buildOption[100];
-		sprintf(buildOption,"-cl-std=CL2.0");
-		//program.build({oclDevice},buildOption);
-		program.build({oclDevice});
+		sprintf(buildOption,"-I /home/frank/Scrivania/tracking_boost/include/ITSReconstruction/CA/");	//must be replaced with relative path
+
+		program.build({oclDevice},buildOption);
+		//program.build({oclDevice});
 		kernel=cl::Kernel(program,kernelName);
 	}
 	catch(const cl::Error &err){

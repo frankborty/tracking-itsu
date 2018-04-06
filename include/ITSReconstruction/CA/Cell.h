@@ -14,12 +14,15 @@
 
 #ifndef TRACKINGITSU_INCLUDE_CACELL_H_
 #define TRACKINGITSU_INCLUDE_CACELL_H_
-
+#ifndef __OPENCL_C_VERSION__
 #include <array>
 #include <vector>
 
 #include "ITSReconstruction/CA/Definitions.h"
 
+#if TRACKINGITSU_OCL_MODE
+#include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
+#endif
 namespace o2
 {
 namespace ITS
@@ -31,7 +34,12 @@ class Cell
   final
   {
     public:
+	  GPU_DEVICE Cell();
       GPU_DEVICE Cell(const int, const int, const int, const int, const int, const float3&, const float);
+
+#if TRACKINGITSU_OCL_MODE
+      GPU_DEVICE Cell(CellStruct&);
+#endif
 
       int getFirstClusterIndex() const;
       int getSecondClusterIndex() const;
@@ -44,15 +52,23 @@ class Cell
       void setLevel(const int level);
 
     private:
-      const int mFirstClusterIndex;
-      const int mSecondClusterIndex;
-      const int mThirdClusterIndex;
-      const int mFirstTrackletIndex;
-      const int mSecondTrackletIndex;
-      const float3 mNormalVectorCoordinates;
-      const float mCurvature;
+#else
+	  typedef struct{
+#endif
+      CONST int mFirstClusterIndex;
+      CONST int mSecondClusterIndex;
+      CONST int mThirdClusterIndex;
+      CONST int mFirstTrackletIndex;
+      CONST int mSecondTrackletIndex;
+      CONST FLOAT3 mNormalVectorCoordinates;
+      CONST float mCurvature;
       int mLevel;
-  };
+
+	  }
+#ifdef __OPENCL_C_VERSION__
+	  Cell;
+#else
+	  ;
 
   inline int Cell::getFirstClusterIndex() const
   {
@@ -102,4 +118,5 @@ class Cell
 }
 }
 }
+#endif
 #endif /* TRACKINGITSU_INCLUDE_CACELL_H_ */

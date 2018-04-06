@@ -17,11 +17,13 @@
 #include <unordered_map>
 #include <vector>
 
-#define TIME_BENCHMARK
+//#define TIME_BENCHMARK
 
 #if defined HAVE_VALGRIND
 # include <valgrind/callgrind.h>
 #endif
+
+int maxEvent,minEvent;
 
 #if TRACKINGITSU_GPU_MODE
 # include "ITSReconstruction/CA/gpu/Utils.h"
@@ -80,9 +82,10 @@ int main(int argc, char** argv)
     fakeRoadsOutputStream.open(benchmarkFolderName + "FakeRoads.txt");
   }
 
+  //clock_t t1, t2;
   std::chrono::time_point<std::chrono::system_clock> start, end;
 
- int totalTime = 0, minTime = std::numeric_limits<int>::max(), maxTime = -1;
+  float totalTime = 0.f, minTime = std::numeric_limits<float>::max(), maxTime = -1;
 #if defined MEMORY_BENCHMARK
   std::ofstream memoryBenchmarkOutputStream;
   memoryBenchmarkOutputStream.open(benchmarkFolderName + "MemoryOccupancy.txt");
@@ -104,7 +107,7 @@ int main(int argc, char** argv)
     Event& currentEvent = events[iEvent];
     std::cout << "Processing event " << iEvent + 1 << std::endl;
     start = std::chrono::system_clock::now();
-   
+    //t1 = clock();
 
 #if defined HAVE_VALGRIND
     // Run callgrind with --collect-atstart=no
@@ -126,17 +129,21 @@ int main(int argc, char** argv)
       CALLGRIND_TOGGLE_COLLECT;
 #endif
 
-     
+      //t2 = clock();
       end = std::chrono::system_clock::now();
       int elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
-      
+//      const float diff = ((float) t2 - (float) t1) / (CLOCKS_PER_SEC / 1000);
 
       totalTime += elapsed_seconds;
 
-      if (minTime > elapsed_seconds)
+      if (minTime > elapsed_seconds){
         minTime = elapsed_seconds;
-      if (maxTime < elapsed_seconds)
+        minEvent=iEvent + 1;
+      }
+      if (maxTime < elapsed_seconds){
         maxTime = elapsed_seconds;
+        maxEvent= iEvent + 1;
+      }
 
       for(int iVertex = 0; iVertex < currentEvent.getPrimaryVerticesNum(); ++iVertex) {
 
@@ -169,8 +176,8 @@ int main(int argc, char** argv)
 
   std::cout << std::endl;
   std::cout << "Avg time: " << totalTime / verticesNum << "ms" << std::endl;
-  std::cout << "Min time: " << minTime << "ms" << std::endl;
-  std::cout << "Max time: " << maxTime << "ms" << std::endl;
+  std::cout << "Min time: " << minTime << "ms\t[event #" <<minEvent << "]" << std::endl;
+  std::cout << "Max time: " << maxTime << "ms\t[event #" <<maxEvent << "]" << std::endl;
 
   return 0;
 }

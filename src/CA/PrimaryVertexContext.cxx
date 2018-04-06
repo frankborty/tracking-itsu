@@ -33,6 +33,7 @@ PrimaryVertexContext::PrimaryVertexContext()
 void PrimaryVertexContext::initialize(const Event& event, const int primaryVertexIndex) {
 
 #if TRACKINGITSU_OCL_MODE
+	std::cout<<"initialize primary vertex"<<std::endl;
 	mPrimaryVertex = event.getPrimaryVertex(primaryVertexIndex);
 	cl::Context oclContext=GPU::Context::getInstance().getDeviceProperties().oclContext;
 
@@ -127,12 +128,12 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 
 			int CellsLookupTableSize=cellsLookupTableMemorySize*sizeof(int);
 			mGPUContext.iCellsLookupTableSize[iLayer]=cellsLookupTableMemorySize;
-			mGPUContext.iCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize+sizeof(int));
+			mGPUContext.iCellsLookupTable[iLayer]=(int*)malloc(CellsLookupTableSize);
 
 			mGPUContext.bCellsLookupTable[iLayer]=cl::Buffer(
 				oclContext,
 				(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-				CellsLookupTableSize+sizeof(int),
+				CellsLookupTableSize,
 				(void *) mGPUContext.iCellsLookupTable[iLayer]);
 
 			if(iLayer < Constants::ITS::CellsPerRoad - 1) {
@@ -238,14 +239,14 @@ void PrimaryVertexContext::initialize(const Event& event, const int primaryVerte
 			int lookUpSize=size*sizeof(int);
 
 
-			mGPUContext.mTrackletsLookupTable[iLayer]=(int*)malloc(lookUpSize+sizeof(int));
+			mGPUContext.mTrackletsLookupTable[iLayer]=(int*)malloc(lookUpSize);
 			mGPUContext.iTrackletsLookupTableSize[iLayer]=size;
-			memset(mGPUContext.mTrackletsLookupTable[iLayer],0,lookUpSize+sizeof(int)); //forse devo mettere size
+			memset(mGPUContext.mTrackletsLookupTable[iLayer],-1,lookUpSize); //forse devo mettere size
 
 			mGPUContext.bTrackletsLookupTable[iLayer]=cl::Buffer(
 				oclContext,
 				(cl_mem_flags)CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-				lookUpSize+sizeof(int),
+				lookUpSize,
 				(void *) mGPUContext.mTrackletsLookupTable[iLayer]);
 		}
 	}

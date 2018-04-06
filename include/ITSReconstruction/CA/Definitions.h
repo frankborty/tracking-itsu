@@ -15,6 +15,32 @@
 #ifndef TRACKINGITSU_INCLUDE_CADEFINITIONS_H_
 #define TRACKINGITSU_INCLUDE_CADEFINITIONS_H_
 
+#ifdef __OPENCL_C_VERSION__
+#define CONSTEXPR __constant
+#define CONST
+#define FLOAT3 Float3Struct
+typedef struct{
+		int x;
+		int y;
+		int z;
+		int w;
+	}Int4Struct;
+
+typedef struct{
+		float x;
+		float y;
+		float z;
+	}Float3Struct;
+
+typedef struct{
+		float x;
+		float y;
+	}Float2Struct;
+
+#else
+#define CONSTEXPR constexpr
+#define CONST const
+#define FLOAT3 float3
 #include <array>
 
 #if defined(TRACKINGITSU_CUDA_COMPILE) || defined (TRACKINGITSU_OPEN_CL_COMPILE)
@@ -25,7 +51,17 @@
 
 #if defined(TRACKINGITSU_OPEN_CL_COMPILE)
 #define __CL_ENABLE_EXCEPTIONS //enable exceptions
+#if defined(__APPLE__)
+#include <OpenCL/cl.hpp>
+#else
 #include <CL/cl.hpp>
+#endif
+#ifndef USE_BOOST
+	#define USE_BOOST
+	#include "boost/compute.hpp"
+	#include "boost/compute/types/complex.hpp"
+	namespace compute = boost::compute;
+#endif
 # define TRACKINGITSU_OCL_MODE true
 # define TRACKINGITSU_CUDA_MODE false
 #elif(TRACKINGITSU_CUDA_COMPILE)
@@ -90,7 +126,7 @@ using GPUArray = std::array<T, Size>;
 
 typedef struct _dummyStream {} GPUStream;
 
-
+#endif
 
 #endif
 

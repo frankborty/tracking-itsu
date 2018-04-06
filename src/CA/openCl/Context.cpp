@@ -41,15 +41,10 @@ Context::Context()
 
 	try{
 
-		// Get the list of platform
 		cl::Platform::get(&platformList);
 		iPlatformList=platformList.size();
-		// Pick first platform
 
-		//std::cout << "There are " << iPlatformList << " platform" << std::endl;
-		//std::cout << std::endl;
 		for(int iPlatForm=0;iPlatForm<(int)iPlatformList;iPlatForm++){
-			//std::cout << "Platform #" << iPlatForm+1 << std::endl;
 			cl::Context context;
 			try{
 				cl_context_properties cprops[] = {
@@ -119,7 +114,7 @@ Context::Context()
 				}
 				else{
 					//std::cout<<">> NOT NVIDIA/AMD" << std::endl;
-					mDeviceProperties[iTotalDevice].warpSize=16;
+					mDeviceProperties[iTotalDevice].warpSize=128;
 				}
 
 
@@ -157,9 +152,9 @@ Context::Context()
 			mDeviceProperties[iCurrentDevice].oclCommandQueues[i]=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, 0);
 		}
 
-		mDeviceProperties[iCurrentDevice].oclCountTrackletKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerTracklets.cl","countLayerTracklets");
+		mDeviceProperties[iCurrentDevice].oclCountTrackletKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/countLayerTracklets.cl","countLayerTracklets");
 		mDeviceProperties[iCurrentDevice].oclComputeTrackletKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerTracklets.cl","computeLayerTracklets");
-		mDeviceProperties[iCurrentDevice].oclCountCellKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerCells.cl","countLayerCells");
+		mDeviceProperties[iCurrentDevice].oclCountCellKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/countLayerCells.cl","countLayerCells");
 		mDeviceProperties[iCurrentDevice].oclComputeCellKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"./src/kernel/computeLayerCells.cl","computeLayerCells");
 
 

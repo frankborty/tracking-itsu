@@ -31,6 +31,23 @@ GPU_DEVICE Cell::Cell(const int firstClusterIndex, const int secondClusterIndex,
   // Nothing to do
 }
 
+GPU_DEVICE Cell::Cell()
+    : mFirstClusterIndex { -1 }, mSecondClusterIndex { -1 }, mThirdClusterIndex {
+        -1 }, mFirstTrackletIndex{-1}, mSecondTrackletIndex{-1}, mNormalVectorCoordinates{0.f,0.f,0.f}, mCurvature { 0.f }, mLevel { 1 }
+{
+  // Nothing to do
+}
+
+#if TRACKINGITSU_OCL_MODE
+GPU_DEVICE Cell::Cell(CellStruct& cellStruct)
+    : mFirstClusterIndex { cellStruct.mFirstClusterIndex }, mSecondClusterIndex { cellStruct.mSecondClusterIndex }, mThirdClusterIndex {
+    	cellStruct.mThirdClusterIndex }, mFirstTrackletIndex(cellStruct.mFirstTrackletIndex), mSecondTrackletIndex(cellStruct.mSecondTrackletIndex), mNormalVectorCoordinates{
+    			cellStruct.mNormalVectorCoordinates.x,cellStruct.mNormalVectorCoordinates.y,cellStruct.mNormalVectorCoordinates.z}, mCurvature { cellStruct.mCurvature }, mLevel { 1 }
+{
+  // Nothing to do
+}
+#endif
+
 }
 }
 }

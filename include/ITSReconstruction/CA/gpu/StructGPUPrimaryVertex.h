@@ -10,28 +10,11 @@
 #include <memory>
 
 #include "ITSReconstruction/CA/Definitions.h"
-/*
-#include "ITSReconstruction/CA/Event.h"
-#include "ITSReconstruction/CA/MathUtils.h"
-#include "ITSReconstruction/CA/PrimaryVertexContext.h"
-#include "ITSReconstruction/CA/Road.h"
-*/
 #include "ITSReconstruction/CA/Constants.h"
-#include "CL/cl.hpp"
 
-	typedef struct __attribute__ ((packed)) int3Struct{
-		cl_int x;
-		cl_int y;
-		cl_int z;
-	}Int3Struct;
 
-	typedef struct __attribute__ ((packed)) float3Struct{
-		cl_float x;
-		cl_float y;
-		cl_float z;
-	}Float3Struct;
 
-	typedef struct __attribute__ ((packed)) clusterStruct{
+	typedef struct{
 		float xCoordinate;
 		float yCoordinate;
 		float zCoordinate;
@@ -43,30 +26,23 @@
 		int indexTableBinIndex;
 	}ClusterStruct;
 
-	typedef struct __attribute__ ((packed)) cellStruct{
+	typedef struct{
 		const int mFirstClusterIndex;
 		const int mSecondClusterIndex;
 		const int mThirdClusterIndex;
 		const int mFirstTrackletIndex;
 		const int mSecondTrackletIndex;
-		Float3Struct mNormalVectorCoordinates;
+		FLOAT3 mNormalVectorCoordinates;
 		const float mCurvature;
 		int mLevel;
 	}CellStruct;
 
-	typedef struct __attribute__ ((packed)) trackletStruct{
+	typedef struct{
 		int firstClusterIndex;
 		int secondClusterIndex;
 		float tanLambda;
 		float phiCoordinate;
 	}TrackletStruct;
-
-
-
-
-
-
-
 
 
 
