@@ -48,7 +48,7 @@ struct Cluster
       int indexTableBinIndex;
       }
 #ifdef __OPENCL_C_VERSION__
-	  Tracklet;
+	  Cluster;
 #else
 	  ;
 
