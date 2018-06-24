@@ -69,7 +69,7 @@ struct DeviceProperties final
 
         //command queues
         cl::CommandQueue oclQueue;
-        cl::CommandQueue oclCommandQueues[Constants::ITS::TrackletsPerRoad];
+        cl::CommandQueue oclCommandQueues[Constants::ITS::LayersNumber];
 #endif
 };
 

@@ -148,7 +148,7 @@ Context::Context()
 	try{
 		mDeviceProperties[iCurrentDevice].oclQueue=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE|CL_QUEUE_PROFILING_ENABLE );
 
-		for(int i=0;i<Constants::ITS::TrackletsPerRoad;i++){
+		for(int i=0;i<Constants::ITS::LayersNumber;i++){
 			mDeviceProperties[iCurrentDevice].oclCommandQueues[i]=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, 0);
 		}
 

@@ -23,6 +23,7 @@
 #include "ITSReconstruction/CA/gpu/Vector.h"
 #elif TRACKINGITSU_OCL_MODE
 #include "ITSReconstruction/CA/gpu/StructGPUPrimaryVertex.h"
+#include "ITSReconstruction/CA/Event.h"
 #endif
 
 
@@ -80,6 +81,11 @@ class PrimaryVertexContext
 
 #if TRACKINGITSU_OCL_MODE
       void initialize(cl::Context oclContext);
+      void newInitialize(
+    		  const Event& event,
+    		  float3& mPrimaryVertex,const std::array<std::vector<Cluster>, Constants::ITS::LayersNumber>& clusters,
+    		  std::array<std::vector<int>, Constants::ITS::CellsPerRoad>& mTrackletsLookupTable);
+
       void sortClusters(int iLayer);
 
       GPU_DEVICE const FLOAT3* getPrimaryVertex();
@@ -91,6 +97,8 @@ class PrimaryVertexContext
       GPU_HOST_DEVICE int** getTrackletsPerClusterTable();
 
     public:
+      	 int iInitialize=1;
+
       	 FLOAT3 mPrimaryVertex;
          cl::Buffer bPrimaryVertex;
 

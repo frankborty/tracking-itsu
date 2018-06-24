@@ -92,7 +92,8 @@ __kernel void countLayerTracklets(
 	
 	if(currentClusterIndex<currentLayerClusterVectorSize){
 		Cluster currentCluster=currentLayerClusters[currentClusterIndex];
-		
+		//if(currentClusterIndex<2)
+			//printf("[%d] %d\t%d\n",currentClusterIndex,currentCluster.clusterId,currentCluster.indexTableBinIndex);
 		float tanLambda=(currentCluster.zCoordinate-primaryVertex->z)/currentCluster.rCoordinate;
 
 		float directionZIntersection= tanLambda*(LayersRCoordinate[iLayer+1]-currentCluster.rCoordinate)+currentCluster.zCoordinate;

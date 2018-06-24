@@ -82,7 +82,7 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 		std::vector<cl::Device> oclDeviceList;
 		oclDeviceList.push_back(oclDevice);
 		char buildOption[100];
-		sprintf(buildOption,"-I /home/frank/Scrivania/tracking-itsu/include/ITSReconstruction/CA/");	//must be replaced with relative path
+		sprintf(buildOption,"-I /home/frank/Scrivania/nativeVersion/include/ITSReconstruction/CA/");	//must be replaced with relative path
 
 		program.build({oclDevice},buildOption);
 		//program.build({oclDevice});
