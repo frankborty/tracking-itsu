@@ -107,14 +107,17 @@ Context::Context()
 				if(mDeviceProperties[iTotalDevice].vendor.find("NVIDIA")!=std::string::npos){
 					//std::cout<<">> NVIDIA" << std::endl;
 					deviceList[iDevice].getInfo(NVIDIA_WAVEFRONT,&(mDeviceProperties[iTotalDevice].warpSize));
+					mDeviceProperties[iTotalDevice].iCpuBlock=CL_FALSE;
 				}
 				else if(mDeviceProperties[iTotalDevice].vendor.find("AMD")!=std::string::npos){
 					//std::cout<<">> AMD" << std::endl;
 					deviceList[iDevice].getInfo(AMD_WAVEFRONT,&(mDeviceProperties[iTotalDevice].warpSize));
+					mDeviceProperties[iTotalDevice].iCpuBlock=CL_FALSE;
 				}
 				else{
 					//std::cout<<">> NOT NVIDIA/AMD" << std::endl;
 					mDeviceProperties[iTotalDevice].warpSize=128;
+					mDeviceProperties[iTotalDevice].iCpuBlock=CL_TRUE;
 				}
 
 

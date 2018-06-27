@@ -70,6 +70,9 @@ struct DeviceProperties final
         //command queues
         cl::CommandQueue oclQueue;
         cl::CommandQueue oclCommandQueues[Constants::ITS::LayersNumber];
+
+        //blocking copy
+        int iCpuBlock;
 #endif
 };
 
