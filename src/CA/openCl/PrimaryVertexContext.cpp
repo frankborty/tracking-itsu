@@ -240,12 +240,13 @@ void PrimaryVertexContext::newInitialize(
 				tmpIndexTables[iLayer - 1][iBin] = iClusterNum;
 			}
 
-
-			clQueues[iLayer].enqueueWriteBuffer(this->bIndexTables[iLayer-1],
-				CL_FALSE,
-				0,
+				
+			this->bIndexTables[iLayer-1]=cl::Buffer(
+				clContext,
+				(cl_mem_flags)CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				(Constants::IndexTable::ZBins * Constants::IndexTable::PhiBins + 1)*sizeof(int),
-				tmpIndexTables[iLayer-1]);
+				(void *) tmpIndexTables[iLayer-1]);
+				
 		 }
 
 	}

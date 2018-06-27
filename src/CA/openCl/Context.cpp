@@ -138,14 +138,9 @@ Context::Context()
 		}
 		std::cout<<"Choose device:";
 		std::cin>>scelta;
-	}
-	catch(const cl::Error &err){
-		std::string errString=Utils::OCLErr_code(err.err());
-		throw std::runtime_error { errString };
-	}
-	iCurrentDevice=scelta;
 
-	try{
+		iCurrentDevice=scelta;
+
 		mDeviceProperties[iCurrentDevice].oclQueue=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE|CL_QUEUE_PROFILING_ENABLE );
 
 		for(int i=0;i<Constants::ITS::LayersNumber;i++){
