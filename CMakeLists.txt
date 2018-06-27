@@ -34,21 +34,20 @@ if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
   add_definitions(-DTRACKINGITSU_OPEN_CL_COMPILE )
   find_package( OpenCL REQUIRED )
   find_package(Boost REQUIRED)
-  find_package(VexCL REQUIRED)
-  include_directories(SYSTEM ${Boost_INCLUDE_DIRS} ${VEXCL_ROOT}/include )
+  include_directories(SYSTEM ${Boost_INCLUDE_DIRS} )
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
 
 add_subdirectory(tracker)
 include_directories(tracker/include)
-add_executable(boostTracking main.cpp)
+add_executable(nativeTracking main.cpp)
 
 if(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
   #target_link_libraries(boostTracking VexCL::OpenCL)
-  target_link_libraries(boostTracking tracker ${OpenCL_LIBRARIES} VexCL::OpenCL)
+  target_link_libraries(nativeTracking tracker ${OpenCL_LIBRARIES})
 endif(TRACKINGITSU_TARGET_DEVICE STREQUAL OPEN_CL)
 
-target_link_libraries(boostTracking tracker)
+target_link_libraries(nativeTracking tracker)
 
-install(TARGETS boostTracking
+install(TARGETS nativeTracking
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib)

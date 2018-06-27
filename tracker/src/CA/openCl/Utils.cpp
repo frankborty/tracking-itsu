@@ -80,7 +80,7 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 		sprintf(options,"-I %s/include",basedir.data());
 		
 		
-		program.build({oclDevice},buildOption);
+		program.build({oclDevice},options);
 		//program.build({oclDevice});
 		kernel=cl::Kernel(program,kernelName);
 	}
@@ -88,11 +88,6 @@ cl::Kernel Utils::CreateKernelFromFile(cl::Context oclContext, cl::Device oclDev
 
 		std::string errString=Utils::OCLErr_code(err.err());
 		std::cout<< errString << std::endl;
-
-		std::cerr
-				<< "OpenCL compilation error" << std::endl
-				<< program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice)
-				<< std::endl;
 
 		throw std::runtime_error { errString };
 	}
