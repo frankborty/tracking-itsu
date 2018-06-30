@@ -145,8 +145,12 @@ Context::Context()
 
 		mDeviceProperties[iCurrentDevice].oclQueue=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE|CL_QUEUE_PROFILING_ENABLE );
 
+		mDeviceProperties[iCurrentDevice].boostDevice=compute::device(mDeviceProperties[iCurrentDevice].oclDevice(),true);
+		mDeviceProperties[iCurrentDevice].boostContext=compute::context(mDeviceProperties[iCurrentDevice].oclContext(),true);
+
 		for(int i=0;i<Constants::ITS::LayersNumber;i++){
 			mDeviceProperties[iCurrentDevice].oclCommandQueues[i]=cl::CommandQueue(mDeviceProperties[iCurrentDevice].oclContext, mDeviceProperties[iCurrentDevice].oclDevice, 0);
+			mDeviceProperties[iCurrentDevice].boostCommandQueues[i]=compute::command_queue(mDeviceProperties[iCurrentDevice].boostContext,mDeviceProperties[iCurrentDevice].boostDevice);
 		}
 
 		mDeviceProperties[iCurrentDevice].oclCountTrackletKernel=GPU::Utils::CreateKernelFromFile(mDeviceProperties[iCurrentDevice].oclContext,mDeviceProperties[iCurrentDevice].oclDevice,"countLayerTracklets.cl","countLayerTracklets");

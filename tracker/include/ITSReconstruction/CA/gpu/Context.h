@@ -71,6 +71,10 @@ struct DeviceProperties final
         cl::CommandQueue oclQueue;
         cl::CommandQueue oclCommandQueues[Constants::ITS::LayersNumber];
 
+        compute::device boostDevice;
+        compute::context boostContext;
+        compute::command_queue boostCommandQueues[Constants::ITS::LayersNumber];
+
         //blocking copy
         int iCpuBlock;
 #endif
