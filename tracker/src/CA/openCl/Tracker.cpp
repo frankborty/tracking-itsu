@@ -286,7 +286,6 @@ void TrackerTraits<true>::computeLayerCells(CA::PrimaryVertexContext& primaryVer
 			int mult=pseudoTracletsNumber/workgroupSize;
 			pseudoTracletsNumber=(mult+1)*workgroupSize;
 		}
-		firstLayerLookUpTable = new int[pseudoTracletsNumber];
 
 		for (int iLayer{ 0 }; iLayer<Constants::ITS::TrackletsPerRoad; ++iLayer){
 			boostQueues[iLayer]=GPU::Context::getInstance().getDeviceProperties().boostCommandQueues[iLayer];
